@@ -1,0 +1,8 @@
+bin/
+obj/
+*.log
+*.swp
+*.db
+.vscode/
+.env
+node_modules/
