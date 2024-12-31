@@ -138,3 +138,11 @@
 /app/obj/Debug/net8.0/WebAPI.pdb
 /app/obj/Debug/net8.0/WebAPI.genruntimeconfig.cache
 /app/obj/Debug/net8.0/ref/WebAPI.dll
+/app/bin/Debug/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/app/bin/Debug/net8.0/Microsoft.IdentityModel.Abstractions.dll
+/app/bin/Debug/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/app/bin/Debug/net8.0/Microsoft.IdentityModel.Logging.dll
+/app/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.dll
+/app/bin/Debug/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/app/bin/Debug/net8.0/Microsoft.IdentityModel.Tokens.dll
+/app/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll

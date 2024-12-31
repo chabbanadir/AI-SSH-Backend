@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Models.Dtos;
-
+using Backend.Interfaces;
 namespace Backend.Controllers.UserControllers
 {
     [ApiController]
@@ -12,11 +12,14 @@ namespace Backend.Controllers.UserControllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IAuthService _authService;
 
-        public UserController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
+        public UserController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager,IAuthService authService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _authService = authService;
+
         }
 
         // Register a new user
@@ -25,7 +28,7 @@ namespace Backend.Controllers.UserControllers
         {
             var user = new AppUser
             {
-                UserName = model.Username,
+                UserName = model.UserName,
                 Email = model.Email,
                 SshClient = model.SshClient
             };
@@ -42,16 +45,16 @@ namespace Backend.Controllers.UserControllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            var user = await _userManager.FindByNameAsync(model.Username);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-                return Unauthorized("Invalid credentials");
+            var token = await _authService.LoginAsync(model);
+            if (string.IsNullOrEmpty(token))
+                return Unauthorized("Invalid username or password.");
 
-            return Ok("Login successful");
+            return Ok(new { token });
         }
 
         // Get all users
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> GetAllUsers()
         {
             var users = _userManager.Users.Select(u => new

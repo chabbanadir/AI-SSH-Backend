@@ -9,5 +9,9 @@ namespace Backend.Data{
 
         [Required]
         public string Title { get; set; }
+        public Todo()
+            {
+                Title = string.Empty;
+            }
     }
 }
