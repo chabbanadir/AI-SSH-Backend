@@ -247,13 +247,13 @@ namespace Backend.Migrations
                     b.Property<string>("Output")
                         .HasColumnType("text");
 
-                    b.Property<string>("SSHSessionId")
+                    b.Property<string>("LinkedSSHSessionId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SSHSessionId");
+                    b.HasIndex("LinkedSSHSessionId");
 
                     b.ToTable("SSHCommands");
                 });
@@ -535,7 +535,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.Models.Entities.SSHSession", "SSHSession")
                         .WithMany("SSHCommands")
-                        .HasForeignKey("SSHSessionId")
+                        .HasForeignKey("LinkedSSHSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

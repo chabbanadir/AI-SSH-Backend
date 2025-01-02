@@ -107,7 +107,7 @@ namespace Backend.Context
             builder.Entity<SSHCommand>()
                 .HasOne(c => c.SSHSession)
                 .WithMany(s => s.SSHCommands)
-                .HasForeignKey(c => c.SSHSessionId)
+                .HasForeignKey(c => c.LinkedSSHSessionId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 

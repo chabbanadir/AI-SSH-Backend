@@ -296,7 +296,7 @@ namespace Backend.Migrations
                     Output = table.Column<string>(type: "text", nullable: true),
                     ExitCode = table.Column<int>(type: "integer", nullable: true),
                     ExecutedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    SSHSessionId = table.Column<string>(type: "text", nullable: false),
+                    LinkedSSHSessionId = table.Column<string>(type: "text", nullable: false),
                     Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<string>(type: "text", nullable: true),
                     LastModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -307,8 +307,8 @@ namespace Backend.Migrations
                 {
                     table.PrimaryKey("PK_SSHCommands", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SSHCommands_SSHSessions_SSHSessionId",
-                        column: x => x.SSHSessionId,
+                        name: "FK_SSHCommands_SSHSessions_LinkedSSHSessionId",
+                        column: x => x.LinkedSSHSessionId,
                         principalTable: "SSHSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -393,9 +393,9 @@ namespace Backend.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_SSHCommands_SSHSessionId",
+                name: "IX_SSHCommands_LinkedSSHSessionId",
                 table: "SSHCommands",
-                column: "SSHSessionId");
+                column: "LinkedSSHSessionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SSHHostConfigs_UserId",

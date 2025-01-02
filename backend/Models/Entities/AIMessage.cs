@@ -7,9 +7,11 @@ namespace Backend.Models.Entities
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Sender { get; set; } = default!;
-        public string MessageText { get; set; } = default!;
-        public DateTime Timestamp { get; set; }
+        public string Message { get; set; } = default!; // Renamed from MessageText
+        public DateTime SentAt { get; set; } // Renamed from Timestamp
         public string AIConversationId { get; set; } = default!;
         public AIConversation AIConversation { get; set; } = default!;
     }
+
+
 }

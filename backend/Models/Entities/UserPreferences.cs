@@ -9,6 +9,9 @@ namespace Backend.Models.Entities
         public string? Language { get; set; }
         public string? Theme { get; set; }
 
+        // New Properties
+        public string? PreferenceToken { get; set; }
+        public bool IsDefault { get; set; }
         // For the default SSH Host:
         public string? DefaultSSHHostId { get; set; }
         public SSHHostConfig? DefaultSSHHost { get; set; }

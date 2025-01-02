@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250101202532_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250102233301_AddMissingProperties")]
+    partial class AddMissingProperties
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -159,6 +159,10 @@ namespace Backend.Migrations
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -196,7 +200,7 @@ namespace Backend.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<string>("MessageText")
+                    b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -204,7 +208,7 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTime>("SentAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -244,11 +248,11 @@ namespace Backend.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("text");
 
-                    b.Property<string>("Output")
-                        .HasColumnType("text");
-
                     b.Property<string>("LinkedSSHSessionId")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Output")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -291,6 +295,9 @@ namespace Backend.Migrations
 
                     b.Property<int>("Port")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("SSHDefaultConfig")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -367,6 +374,9 @@ namespace Backend.Migrations
                     b.Property<string>("DefaultSSHHostId")
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -377,6 +387,9 @@ namespace Backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreferenceToken")
                         .HasColumnType("text");
 
                     b.Property<string>("Theme")

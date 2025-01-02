@@ -13,6 +13,7 @@ namespace Backend.Models.Entities
         public string? PasswordOrKeyPath { get; set; }
         public string UserId { get; set; } = default!;
         public AppUser User { get; set; } = default!;
+        public bool SSHDefaultConfig { get; set; } // Example property
         public virtual ICollection<SSHSession> SSHSessions { get; set; } = new List<SSHSession>();
         public virtual ICollection<UserPreferences> DefaultPrefs { get; set; } = new List<UserPreferences>();
     }

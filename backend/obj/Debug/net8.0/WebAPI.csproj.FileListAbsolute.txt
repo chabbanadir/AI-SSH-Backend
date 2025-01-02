@@ -58,6 +58,8 @@
 /app/bin/Debug/net8.0/Mono.TextTemplating.dll
 /app/bin/Debug/net8.0/Npgsql.dll
 /app/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+/app/bin/Debug/net8.0/Renci.SshNet.dll
+/app/bin/Debug/net8.0/SshNet.Security.Cryptography.dll
 /app/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
 /app/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /app/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll

@@ -48,6 +48,10 @@ builder.Services.AddHttpContextAccessor();
 // Add AuthService and UserService
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddHttpClient<IAIService, AIService>();
+builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<ISSHService, SSHService>();
+builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
 
 // Register Repositories (that depend on IAppDbContext)
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -90,9 +94,12 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
     try
     {
         await DbInitializer.InitializeAsync(services);
+        db.Database.Migrate();
     }
     catch (Exception ex)
     {
