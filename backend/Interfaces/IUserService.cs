@@ -3,8 +3,9 @@ namespace Backend.Interfaces
 {
     public interface IUserService
     {
-        Task<UserDto> GetUserByIdAsync(string userId);
-        Task UpdateUserAsync(UserDto userDto);
-        // Additional user-related methods
+        Task<Result<UserDto>> GetUserByIdAsync(string userId);
+            Task<Result> UpdateUserAsync(UserDto userDto);
+        Task<Result<IEnumerable<UserDto>>> GetAllUsersAsync();
+        Task<Result> AssignRoleAsync(AssignRoleDto model);
     }
 }

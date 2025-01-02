@@ -14,20 +14,20 @@ namespace Backend.Repository
         public GenericRepository(IAppDbContext context)
         {
             _context = context;
-            _dbSet = _context.Set<T>(); // In your real code, you need `IAppDbContext` to expose `DbSet<T> Set<T>()`.
+            _dbSet = _context.Set<T>(); // Ensure IAppDbContext exposes DbSet<T> Set<T>()
         }
 
-        public virtual async Task<T> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(string id) // Changed id type to string
         {
             return await _dbSet.FindAsync(id);
         }
 
-        public virtual async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T?>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }
 
-        public virtual async Task<T> AddAsync(T entity)
+        public virtual async Task<T?> AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
             return entity;

@@ -4,93 +4,106 @@ using Microsoft.AspNetCore.Mvc;
 using Backend.Models;
 using Backend.Models.Dtos;
 using Backend.Interfaces;
+
 namespace Backend.Controllers.UserControllers
 {
     [ApiController]
     [Route("api/users")]
     public class UserController : ControllerBase
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
 
-        public UserController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager,IAuthService authService)
+        public UserController(
+            IAuthService authService,
+            IUserService userService)
         {
-            _userManager = userManager;
-            _roleManager = roleManager;
             _authService = authService;
-
+            _userService = userService;
         }
 
         // Register a new user
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var user = new AppUser
-            {
-                UserName = model.UserName,
-                Email = model.Email,
-                SshClient = model.SshClient
-            };
+            var result = await _authService.SignUpAsync(model);
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Success)
+                return BadRequest(result.Message);
 
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok("User registered successfully");
+            return Ok(new { message = result.Message });
         }
 
         // Login a user
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            var token = await _authService.LoginAsync(model);
-            if (string.IsNullOrEmpty(token))
-                return Unauthorized("Invalid username or password.");
+            var result = await _authService.LoginAsync(model);
+            if (!result.Success)
+                return Unauthorized(result.Message);
 
-            return Ok(new { token });
+            return Ok(new { message = result.Message });
+        }
+
+        // Logout a user
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            var result = await _authService.LogoutAsync();
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(new { message = result.Message });
         }
 
         // Get all users
         [HttpGet]
-
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = _userManager.Users.Select(u => new
-            {
-                u.Id,
-                u.UserName,
-                u.Email,
-                u.SshClient
-            });
+            var result = await _userService.GetAllUsersAsync();
+            if (!result.Success)
+                return BadRequest(result.Message);
 
-            return Ok(users);
+            return Ok(result.Data);
         }
 
         // Assign a role to a user
         [HttpPost("assign-role")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
-            var user = await _userManager.FindByIdAsync(model.UserId);
-            if (user == null)
-                return NotFound("User not found");
+            var result = await _userService.AssignRoleAsync(model);
+            if (!result.Success)
+                return BadRequest(result.Message);
 
-            var roleExists = await _roleManager.RoleExistsAsync(model.Role);
-            if (!roleExists)
-                await _roleManager.CreateAsync(new IdentityRole(model.Role));
+            return Ok(new { message = result.Message });
+        }
 
-            var result = await _userManager.AddToRoleAsync(user, model.Role);
+        // Get user by ID
+        [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetUserById(string id)
+        {
+            var result = await _userService.GetUserByIdAsync(id);
+            if (!result.Success)
+                return NotFound(result.Message);
 
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            return Ok(result.Data);
+        }
 
-            return Ok("Role assigned successfully");
+        // Update user
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] UserDto userDto)
+        {
+            if (id != userDto.Id)
+                return BadRequest("User ID mismatch");
+
+            var result = await _userService.UpdateUserAsync(userDto);
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(new { message = result.Message });
         }
     }
-
-
-
-
 }

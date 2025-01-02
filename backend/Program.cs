@@ -1,100 +1,106 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using Backend.Models;
-using Backend.Data;
-using Backend.Context;
-using Backend.Interfaces;
-using Backend.Services;
-using Backend.Repository;
 using Microsoft.Extensions.Options; // crucial "using" to fix the IOptions error
 using Microsoft.AspNetCore.Authentication.JwtBearer;  // For JwtBearerDefaults
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Diagnostics;
+
+using Backend.Models;
+using Backend.Context;
+using Backend.Interfaces;
+using Backend.Services;
+using Backend.Repository;
+using Backend.Data;
+using Backend.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddScoped<ITokenService, TokenService>();
 
-// 1. Read the config
-var jwtSettingsSection = builder.Configuration.GetSection("Jwt");
-
-var jwtConfig = jwtSettingsSection.Get<JwtConfig>(); 
-// or read them individually, e.g. jwtSettingsSection["Key"]
-
-builder.Services.Configure<JwtConfig>(jwtSettingsSection);
-
-// 2. Configure Authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false; // Set this to true in production
-    options.SaveToken = true; 
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-
-        ValidIssuer = jwtConfig.Issuer,
-        ValidAudience = jwtConfig.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtConfig.Key)),
-
-        ClockSkew = TimeSpan.Zero // Remove default 5 min buffer
-    };
-});
 
 // Configure services
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreDB")));
 
-// 2. Tell DI how to resolve IAppDbContext: use the same AppDbContext 
+// Tell DI how to resolve IAppDbContext: use the same AppDbContext 
 builder.Services.AddScoped<IAppDbContext>(provider =>
     provider.GetRequiredService<AppDbContext>());
 
-// 2) Add Identity services
-builder.Services.AddIdentity<AppUser, IdentityRole>()
+// Add Identity services
+builder.Services.AddIdentity<AppUser, AppRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-// 3) Add your AuthService and UserService
+// Use Extension Methods for Configuration
+builder.Services.ConfigureIdentityOptions();
+builder.Services.ConfigureCookieSettings();
+builder.Services.ConfigureAuthorizationPolicies();
+builder.Services.ConfigureDataProtection();
+
+// Register other services
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddHttpContextAccessor();
+
+// Add AuthService and UserService
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddDistributedMemoryCache(); // Add this line before AddSession
 
-// 3. RRegister Repositories (that depend on IAppDbContext)
+// Register Repositories (that depend on IAppDbContext)
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
+// Add distributed memory cache (for session)
+builder.Services.AddDistributedMemoryCache();
 
 // Enable session for temporary data storage
 builder.Services.AddSession();
 
+// Add Controllers and Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UseHttpsRedirection();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+}else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
+app.UseRouting();
+
+app.UseSession(); // If using session-based authentication
+
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllers();
-app.UseHttpsRedirection();
 
-app.Run();
+// Initialize the database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        await DbInitializer.InitializeAsync(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while initializing the database.");
+        // Optionally, rethrow the exception if you want the application to stop
+        // throw;
+    }
+}
 
+app.Run(); // This should keep the application running

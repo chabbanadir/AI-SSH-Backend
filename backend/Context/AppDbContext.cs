@@ -1,55 +1,171 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Backend.Models;
-using Backend.Data;
-using Backend.Interfaces;
-namespace Backend.Context{
+using Microsoft.AspNetCore.Http;
 
-   // If you are using Identity, you typically inherit from IdentityDbContext:
-    public class AppDbContext 
-        : IdentityDbContext<AppUser, IdentityRole, string>
-        , IAppDbContext
+using Backend.Models;
+using Backend.Models.Communs;
+using Backend.Models.Entities;
+using Backend.Interfaces;
+
+namespace Backend.Context
+{
+    public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>, IAppDbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-            : base(options)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
+            _httpContextAccessor = httpContextAccessor;
+
         }
 
-        // DbSets for each entity in your domain:
-        public DbSet<AppUser> AppUsers { get; set; }
-        public DbSet<Todo> Todos { get; set; }
+        // DbSets for domain entities
+        public DbSet<UserPreferences> UserPreferences { get; set; } = default!;
+        public DbSet<SSHHostConfig> SSHHostConfigs { get; set; } = default!;
+        public DbSet<SSHSession> SSHSessions { get; set; } = default!;
+        public DbSet<SSHCommand> SSHCommands { get; set; } = default!;
+        public DbSet<AIConversation> AIConversations { get; set; } = default!;
+        public DbSet<AIMessage> AIMessages { get; set; } = default!;
+
         public override DbSet<T> Set<T>()
         {
             return base.Set<T>();
         }
-        // If you have custom IdentityUser or IdentityRole classes, 
-        // you would define them here as well, if needed.
 
-        // Implement the interface methods.
         public override int SaveChanges()
         {
-            // You can add extra logic here (e.g., auditing) if needed
+            OnBeforeSaving();
             return base.SaveChanges();
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // You can add extra logic here (e.g., auditing) if needed
+            OnBeforeSaving();
             return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void OnBeforeSaving()
+        {
+            var userName = _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "System";
+
+            var entries = ChangeTracker.Entries<AuditableEntity>();
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.Created = DateTime.UtcNow;
+                    entry.Entity.CreatedBy = userName;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.LastModified = DateTime.UtcNow;
+                    entry.Entity.LastModifiedBy = userName;
+                }
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            // For IdentityDbContext-based projects, remember to call the base:
             base.OnModelCreating(builder);
 
-            // Configure entity relationships, constraints, etc., e.g.:
-            // builder.Entity<Product>(entity =>
-            // {
-            //     entity.HasKey(e => e.Id);
-            //     ...
-            // });
+            // Configure relationships and cascading behaviors
+            builder.Entity<AppUser>()
+                .HasMany(u => u.SSHHostConfigs)
+                .WithOne(c => c.User)
+                .HasForeignKey(c => c.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<AppUser>()
+                .HasOne(u => u.UserPreferences)
+                .WithOne(up => up.User)
+                .HasForeignKey<UserPreferences>(up => up.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserPreferences>()
+                .HasOne(up => up.DefaultSSHHost)
+                .WithMany(c => c.DefaultPrefs)
+                .HasForeignKey(up => up.DefaultSSHHostId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<SSHSession>()
+                .HasOne(s => s.User)
+                .WithMany(u => u.SSHSessions)
+                .HasForeignKey(s => s.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SSHSession>()
+                .HasOne(s => s.SSHHostConfig)
+                .WithMany(c => c.SSHSessions)
+                .HasForeignKey(s => s.SSHHostConfigId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<SSHCommand>()
+                .HasOne(c => c.SSHSession)
+                .WithMany(s => s.SSHCommands)
+                .HasForeignKey(c => c.SSHSessionId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<AIConversation>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.AIConversations)
+                .HasForeignKey(a => a.UserId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<AIConversation>()
+                .HasOne(a => a.LinkedSSHSession)
+                .WithMany(s => s.AIConversations)
+                .HasForeignKey(a => a.LinkedSSHSessionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<AIMessage>()
+                .HasOne(m => m.AIConversation)
+                .WithMany(a => a.AIMessages)
+                .HasForeignKey(m => m.AIConversationId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Identity tables to use string keys and rename table names
+            builder.Entity<AppUser>(entity =>
+            {
+                entity.ToTable(name: "AspNetUsers");
+            });
+
+            builder.Entity<AppRole>(entity =>
+            {
+                entity.ToTable(name: "AspNetRoles");
+            });
+
+            builder.Entity<IdentityUserRole<string>>(entity =>
+            {
+                entity.ToTable("AspNetUserRoles");
+            });
+
+            builder.Entity<IdentityUserClaim<string>>(entity =>
+            {
+                entity.ToTable("AspNetUserClaims");
+            });
+
+            builder.Entity<IdentityUserLogin<string>>(entity =>
+            {
+                entity.ToTable("AspNetUserLogins");
+            });
+
+            builder.Entity<IdentityRoleClaim<string>>(entity =>
+            {
+                entity.ToTable("AspNetRoleClaims");
+            });
+
+            builder.Entity<IdentityUserToken<string>>(entity =>
+            {
+                entity.ToTable("AspNetUserTokens");
+            });
         }
     }
 }

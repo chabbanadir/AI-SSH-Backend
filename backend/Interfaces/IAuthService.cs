@@ -4,8 +4,8 @@ namespace Backend.Interfaces
 {
     public interface IAuthService
     {
-        Task<string> LoginAsync(LoginDto model);
-        Task<bool> SignUpAsync(RegisterDto registerDto);
-        // More identity/auth-related methods...
+        Task<Result<string>> LoginAsync(LoginDto model);
+        Task<Result> SignUpAsync(RegisterDto registerDto);
+        Task<Result> LogoutAsync();
     }
 }

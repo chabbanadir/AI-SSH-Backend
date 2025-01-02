@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options; // crucial "using" to fix the IOptions error
+using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
@@ -21,7 +21,7 @@ namespace Backend.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id), // ID is now string
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty)
             };
 

@@ -2,9 +2,18 @@ namespace Backend.Models.Dtos
 {
     public class UserDto
     {
+        public string Id {get; set;}
         public string UserId { get; set; }     // or 'Id' 
         public string UserName { get; set; }   // might be known as 'Username'
         public string? Email { get; set; } 
-        public string SshClient {get ; set;} // only if you want to expose email
+        public IList<string> Roles { get; set; } = new List<string>();
+
+    public UserDto()
+    {
+        Id = string.Empty;
+        UserId = string.Empty;
+        UserName = string.Empty;
+        Email = string.Empty;
+    }
     }
 }
