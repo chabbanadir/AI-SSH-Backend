@@ -49,9 +49,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient<IAIService, AIService>();
-builder.Services.AddScoped<IAIService, AIService>();
+//builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ISSHService, SSHService>();
-builder.Services.AddSingleton<SSHSessionManager>();
+builder.Services.AddSingleton<ISSHSessionManager, SSHSessionManager>();
 builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
 builder.Services.AddLogging();
 

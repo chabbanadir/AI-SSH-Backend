@@ -27,7 +27,7 @@ namespace Backend.Services{
             {
                 await connection.OpenAsync(cancellationToken);
 
-                using (var writer = connection.BeginBinaryImport("COPY \"SSHCommands\" (\"Id\", \"Command\", \"Output\", \"ExecutedAt\", \"LinkedSSHSessionId\") FROM STDIN (FORMAT BINARY)"))
+                using (var writer = connection.BeginBinaryImport("COPY \"SSHCommands\" (\"Id\", \"Command\", \"Output\", \"ExecutedAt\", \"SSHSessionId\") FROM STDIN (FORMAT BINARY)"))
                 {
                     foreach (var command in commands)
                     {
@@ -36,7 +36,7 @@ namespace Backend.Services{
                         writer.Write(command.CommandText, NpgsqlTypes.NpgsqlDbType.Text);
                         writer.Write(command.Output, NpgsqlTypes.NpgsqlDbType.Text);
                         writer.Write(command.ExecutedAt, NpgsqlTypes.NpgsqlDbType.Timestamp);
-                        writer.Write(command.LinkedSSHSessionId, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(command.SSHSessionId, NpgsqlTypes.NpgsqlDbType.Varchar);
                     }
 
                     await writer.CompleteAsync(cancellationToken);
@@ -52,14 +52,14 @@ namespace Backend.Services{
             {
                 await connection.OpenAsync(cancellationToken);
 
-                using (var writer = connection.BeginBinaryImport("COPY \"AIConversations\" (\"Id\", \"Topic\", \"LinkedSSHSessionId\") FROM STDIN (FORMAT BINARY)"))
+                using (var writer = connection.BeginBinaryImport("COPY \"AIConversations\" (\"Id\", \"Topic\", \"SSHSessionId\") FROM STDIN (FORMAT BINARY)"))
                 {
                     foreach (var conversation in conversations)
                     {
                         writer.StartRow();
                         writer.Write(conversation.Id, NpgsqlTypes.NpgsqlDbType.Varchar);
                         writer.Write(conversation.Topic, NpgsqlTypes.NpgsqlDbType.Text);
-                        writer.Write(conversation.LinkedSSHSessionId, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(conversation.SSHSessionId, NpgsqlTypes.NpgsqlDbType.Varchar);
                     }
 
                     await writer.CompleteAsync(cancellationToken);

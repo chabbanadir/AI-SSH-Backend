@@ -16,7 +16,7 @@ namespace Backend.Services{
     public class SSHService : ISSHService
     {
         // Manage Sessions and commands 
-        private readonly SSHSessionManager _sessionManager;
+        private readonly ISSHSessionManager _sessionManager;
         // Manages active SSH sessions with their corresponding SSH clients
         private readonly ILogger<SSHService> _logger;
         // Stores executed commands for each session
@@ -25,7 +25,7 @@ namespace Backend.Services{
         private readonly IBulkInsertService _bulkInsertService;
 
         public SSHService(
-            SSHSessionManager sessionManager,
+            ISSHSessionManager sessionManager,
             IGenericRepository<SSHSession> sshSessionRepo,
             IGenericRepository<SSHCommand> sshCommandRepo,
             IBulkInsertService bulkInsertService,
@@ -39,40 +39,37 @@ namespace Backend.Services{
         }
         public async Task<SSHSession> StartSessionAsync(SSHHostConfig config, CancellationToken cancellationToken)
         {
-            return await Task.Run(async () =>
+            _logger.LogInformation("Trying to connect SSH to {Hostname}:{Port} as {Username}", config.Hostname, config.Port, config.Username);
+            var client = new SshClient(config.Hostname, config.Port, config.Username, config.PasswordOrKeyPath);
+            client.Connect();
+            _logger.LogInformation("SSH connected to {Hostname}:{Port}", config.Hostname, config.Port);
+
+            var session = new SSHSession
             {
-                _logger.LogInformation("Trying to connect SSH to {Hostname}:{Port} as {Username}", config.Hostname, config.Port, config.Username);
-                var client = new SshClient(config.Hostname, config.Port, config.Username, config.PasswordOrKeyPath);
-                client.Connect();
-                _logger.LogInformation("SSH connected to {Hostname}:{Port}", config.Hostname, config.Port);
+                Id = Guid.NewGuid().ToString(),
+                SessionStartTime = DateTime.UtcNow,
+                UserId = config.UserId,
+                SSHHostConfigId = config.Id,
+                SSHHostConfig = config
+            };
+            _logger.LogInformation("Saving the session with ID: {SessionId} to the repository", session.Id);
+            await _sshSessionRepo.AddAsync(session);
+            await _sshSessionRepo.SaveChangesAsync(); // Ensure changes are saved
 
-                var session = new SSHSession
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    SessionStartTime = DateTime.UtcNow,
-                    UserId = config.UserId,
-                    SSHHostConfigId = config.Id,
-                    SSHHostConfig = config
-                };
-                _logger.LogInformation("Saving the session with ID: {SessionId} to the repository", session.Id);
-                await _sshSessionRepo.AddAsync(session);
-                await _sshSessionRepo.SaveChangesAsync(); // Ensure changes are saved
+            _logger.LogInformation("Adding session with ID: {SessionId} to active sessions", session.Id);
+            bool added = _sessionManager.ActiveSessions.TryAdd(session.Id, client);
+            if (!added)
+            {
+                _logger.LogError("Failed to add session with ID: {SessionId} to active sessions.", session.Id);
+                throw new Exception("Failed to add SSH session to active sessions.");
+            }
+            _logger.LogInformation("Session with ID: {SessionId} added successfully.", session.Id);
 
-                _logger.LogInformation("Adding session with ID: {SessionId} to active sessions", session.Id);
-                bool added = _sessionManager.ActiveSessions.TryAdd(session.Id, client);
-                if (!added)
-                {
-                    _logger.LogError("Failed to add session with ID: {SessionId} to active sessions.", session.Id);
-                    throw new Exception("Failed to add SSH session to active sessions.");
-                }
-                _logger.LogInformation("Session with ID: {SessionId} added successfully.", session.Id);
+            // Initialize the command list for this session
+            _sessionManager.SessionCommands.TryAdd(session.Id, new List<SSHCommand>());
 
-                // Initialize the command list for this session
-                _sessionManager.SessionCommands.TryAdd(session.Id, new List<SSHCommand>());
-
-                return session;
-            }, cancellationToken);
-        }
+            return session;
+        }   
 
         public async Task<string> ExecuteCommandAsync(string sessionId, string command, CancellationToken cancellationToken)
         {
@@ -80,37 +77,39 @@ namespace Backend.Services{
             if (_sessionManager.ActiveSessions.TryGetValue(sessionId, out var client))
             {
                 _logger.LogInformation("Session found. Executing command: {Command}", command);
-                return await Task.Run(() =>
+
+                var cmd = client.CreateCommand(command);
+                var result = cmd.Execute();
+
+                var sshCommand = new SSHCommand
                 {
-                    var cmd = client.CreateCommand(command);
-                    var result = cmd.Execute();
+                    Id = Guid.NewGuid().ToString(),
+                    CommandText = command,
+                    Output = result,
+                    ExecutedAt = DateTime.UtcNow,
+                    SSHSessionId = sessionId
+                };
 
-                    var sshCommand = new SSHCommand
+                // Add the command to the in-memory list for bulk insertion later
+                if (_sessionManager.SessionCommands.TryGetValue(sessionId, out var commandList))
+                {
+                    lock (commandList) // Ensure thread safety
                     {
-                        Id = Guid.NewGuid().ToString(),
-                        CommandText = command,
-                        Output = result,
-                        ExecutedAt = DateTime.UtcNow,
-                        LinkedSSHSessionId = sessionId
-                    };
-
-                    // Add the command to the in-memory list for bulk insertion later
-                    if (_sessionManager.SessionCommands.TryGetValue(sessionId, out var commandList))
-                    {
-                        lock (commandList) // Ensure thread safety
-                        {
-                            commandList.Add(sshCommand);
-                        }
+                        commandList.Add(sshCommand);
                     }
-                    else
-                    {
-                        _logger.LogError("Session command list not found for session ID: {SessionId}", sessionId);
-                        throw new InvalidOperationException("Session command list not found.");
-                    }
+                }
+                else
+                {
+                    _logger.LogError("Session command list not found for session ID: {SessionId}", sessionId);
+                    throw new InvalidOperationException("Session command list not found.");
+                }
 
-                    _logger.LogInformation("Command '{Command}' executed successfully for session ID: {SessionId}", command, sessionId);
-                    return result; // Return the command output
-                }, cancellationToken);
+                // Await the asynchronous repository methods
+                await _sshCommandRepo.AddAsync(sshCommand);
+                await _sshCommandRepo.SaveChangesAsync();
+
+                _logger.LogInformation("Command '{Command}' executed successfully for session ID: {SessionId}", command, sessionId);
+                return result; // Return the command output
             }
             else
             {

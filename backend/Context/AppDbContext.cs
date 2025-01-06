@@ -107,7 +107,7 @@ namespace Backend.Context
             builder.Entity<SSHCommand>()
                 .HasOne(c => c.SSHSession)
                 .WithMany(s => s.SSHCommands)
-                .HasForeignKey(c => c.LinkedSSHSessionId)
+                .HasForeignKey(c => c.SSHSessionId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -121,7 +121,7 @@ namespace Backend.Context
             builder.Entity<AIConversation>()
                 .HasOne(a => a.LinkedSSHSession)
                 .WithMany(s => s.AIConversations)
-                .HasForeignKey(a => a.LinkedSSHSessionId)
+                .HasForeignKey(a => a.SSHSessionId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.Entity<AIMessage>()

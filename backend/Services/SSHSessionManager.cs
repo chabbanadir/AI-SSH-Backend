@@ -2,10 +2,10 @@
 using System.Collections.Concurrent;
 using Renci.SshNet;
 using Backend.Models.Entities;
-
+using Backend.Interfaces;
 namespace Backend.Services
 {
-    public class SSHSessionManager
+    public class SSHSessionManager :ISSHSessionManager
     {
         // Manages active SSH sessions with their corresponding SSH clients
         public ConcurrentDictionary<string, SshClient> ActiveSessions { get; } = new ConcurrentDictionary<string, SshClient>();

@@ -11,7 +11,7 @@ namespace Backend.Models.Entities
     public DateTime? EndedAt { get; set; }
     public string UserId { get; set; } = default!;
     public AppUser User { get; set; } = default!;
-    public string? LinkedSSHSessionId { get; set; } // Renamed
+    public string? SSHSessionId { get; set; } // Renamed
     public SSHSession? LinkedSSHSession { get; set; } // Renamed
     public virtual ICollection<AIMessage> AIMessages { get; set; } = new List<AIMessage>();
     }

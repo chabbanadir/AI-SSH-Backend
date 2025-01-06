@@ -10,7 +10,7 @@ namespace Backend.Models.Entities
         public string? Output { get; set; }
         public int? ExitCode { get; set; }
         public DateTime ExecutedAt { get; set; }
-        public string LinkedSSHSessionId { get; set; } = default!;
+        public string SSHSessionId { get; set; } = default!;
         public SSHSession SSHSession { get; set; } = default!;
     }
 }

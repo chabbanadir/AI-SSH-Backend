@@ -39,7 +39,7 @@ namespace Backend.Controllers.Entities{
             {
                 Id = Guid.NewGuid().ToString(),
                 Topic = request.Topic,
-                LinkedSSHSessionId = sessionId
+                SSHSessionId = sessionId
             };
 
             _context.AIConversations.Add(conversation);
