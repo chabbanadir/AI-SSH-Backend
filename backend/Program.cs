@@ -51,7 +51,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient<IAIService, AIService>();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ISSHService, SSHService>();
+builder.Services.AddSingleton<SSHSessionManager>();
 builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
+builder.Services.AddLogging();
 
 // Register Repositories (that depend on IAppDbContext)
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -63,7 +65,11 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
 
 // Add Controllers and Swagger
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

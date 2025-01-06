@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Npgsql;
-using Backend.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Backend.Models.Entities;
 
 using Backend.Interfaces;
 using Backend.Context;
-using Backend.Models.Entities;
 
 namespace Backend.Services{
      public class BulkInsertService : IBulkInsertService

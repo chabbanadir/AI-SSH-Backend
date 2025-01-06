@@ -7,7 +7,7 @@ namespace Backend.Interfaces{
     public interface ISSHService
     {
         Task<SSHSession> StartSessionAsync(SSHHostConfig config, CancellationToken cancellationToken);
-        Task ExecuteCommandAsync(string sessionId, string command, CancellationToken cancellationToken);
+        Task<string> ExecuteCommandAsync(string sessionId, string command, CancellationToken cancellationToken);
         Task EndSessionAsync(string sessionId, CancellationToken cancellationToken);
     }
 }

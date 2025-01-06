@@ -1,58 +1,86 @@
 // Controllers/SSHSessionController.cs
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
 using System.Linq;
 using Backend.Interfaces;
-using Backend.Context;
+using Backend.Models.Dtos;
 using Backend.Models.Entities;
+using Microsoft.Extensions.Logging;
 
-namespace Backend.Controllers.Entities{
-[ApiController]
+namespace Backend.Controllers.Entities
+{
+    [ApiController]
     [Route("api/[controller]")]
     public class SSHSessionController : ControllerBase
     {
+        private readonly ILogger<SSHSessionController> _logger;
         private readonly ISSHService _sshService;
-        private readonly AppDbContext _context;
-        private readonly IBulkInsertService _bulkInsertService;
+        private readonly IGenericRepository<SSHHostConfig> _sshHostConfigRepo;
+        private readonly IGenericRepository<SSHSession> _sshSessionRepo;
 
-        public SSHSessionController(ISSHService sshService, AppDbContext context, IBulkInsertService bulkInsertService)
+        public SSHSessionController(
+            ISSHService sshService,
+            IGenericRepository<SSHHostConfig> sshHostConfigRepo,
+            IGenericRepository<SSHSession> sshSessionRepo,
+            ILogger<SSHSessionController> logger)
         {
             _sshService = sshService;
-            _context = context;
-            _bulkInsertService = bulkInsertService;
+            _sshHostConfigRepo = sshHostConfigRepo;
+            _logger = logger;
+            _sshSessionRepo = sshSessionRepo;
         }
 
         // POST: api/SSHSession
         [HttpPost]
         public async Task<ActionResult<SSHSession>> StartSession(StartSessionRequest request, CancellationToken cancellationToken)
         {
-            var config = await _context.SSHHostConfigs.FindAsync(new object[] { request.SSHHostConfigId }, cancellationToken);
-            if (config == null)
+            try
             {
-                return BadRequest("Invalid SSH Host Configuration.");
-            }
+                // Retrieve SSHHostConfig using the generic repository
 
-            var session = await _sshService.StartSessionAsync(config, cancellationToken);
-            return CreatedAtAction(nameof(GetSession), new { id = session.Id }, session);
+
+                var config = await _sshHostConfigRepo.GetByIdAsync(request.SSHHostConfigId);
+                if (config == null)
+                {
+                    return BadRequest("Invalid SSH Host Configuration.");
+                }
+                _logger.LogInformation("SSH config found");
+                var session = await _sshService.StartSessionAsync(config, cancellationToken);
+                _logger.LogInformation("_sshService executed");
+                return CreatedAtAction(nameof(GetSession), new { id = session.Id }, session);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex.Message);
+                // Handle exceptions and return appropriate error responses
+                return StatusCode(500, "An error occurred while starting the SSH session." );
+            }
         }
+        
+
 
         // GET: api/SSHSession/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<SSHSession>> GetSession(string id, CancellationToken cancellationToken)
         {
-            var session = await _context.SSHSessions
-                .Include(s => s.SSHHostConfig)
-                .Include(s => s.User)
-                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-
-            if (session == null)
+            try
             {
-                return NotFound();
-            }
+                // Retrieve SSHSession using the generic repository
+                var session = await _sshSessionRepo.GetByIdAsync(id);
+                if (session == null)
+                {
+                    return NotFound();
+                }
 
-            return session;
+                return session;
+            }
+            catch 
+            {
+                // Handle exceptions and return appropriate error responses
+                return StatusCode(500, "An error occurred while retrieving the SSH session.");
+            }
         }
 
         // POST: api/SSHSession/{id}/ExecuteCommand
@@ -61,12 +89,17 @@ namespace Backend.Controllers.Entities{
         {
             try
             {
-                await _sshService.ExecuteCommandAsync(id, request.Command, cancellationToken);
-                return Ok(new { Message = "Command executed successfully." });
+                var result = await _sshService.ExecuteCommandAsync(id, request.Command, cancellationToken);
+                return Ok(new { Output = result });
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch 
+            {
+                // Handle exceptions and return appropriate error responses
+                return StatusCode(500, "An error occurred while executing the command.");
             }
         }
 
@@ -77,29 +110,15 @@ namespace Backend.Controllers.Entities{
             try
             {
                 await _sshService.EndSessionAsync(id, cancellationToken);
-
-                // Retrieve SSHCommands related to this session
-                var commands = await _context.SSHCommands.Where(c => c.LinkedSSHSessionId == id).ToListAsync(cancellationToken);
-
-                if (commands.Any())
-                {
-                    await _bulkInsertService.BulkInsertSSHCommandsAsync(commands, cancellationToken);
-                    _context.SSHCommands.RemoveRange(commands);
-                }
-
-                // Similarly, handle AIConversations and AIMessages if applicable
-
-                await _context.SaveChangesAsync(cancellationToken);
-
                 return Ok(new { Message = "Session ended and data bulk inserted successfully." });
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception ex)
+            catch 
             {
-                // Log the exception (implement logging as needed)
+                // Handle exceptions and return appropriate error responses
                 return StatusCode(500, "An error occurred while ending the session.");
             }
         }
