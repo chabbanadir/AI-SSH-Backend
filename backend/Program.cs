@@ -13,6 +13,8 @@ using Backend.Models;
 using Backend.Context;
 using Backend.Interfaces;
 using Backend.Services;
+using Backend.Models.Entities;
+
 using Backend.Repository;
 using Backend.Data;
 using Backend.Extensions;
@@ -61,7 +63,11 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 // Add distributed memory cache (for session)
 builder.Services.AddDistributedMemoryCache();
 
-// Enable session for temporary data storage
+// Gemini
+
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+
+builder.Services.AddHttpClient<IGenerativeAIService, GenerativeAIService>();// Enable session for temporary data storage
 builder.Services.AddSession();
 
 // Add Controllers and Swagger

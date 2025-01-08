@@ -21,7 +21,7 @@ namespace Backend.Services{
 
         public async Task BulkInsertSSHCommandsAsync(IEnumerable<SSHCommand> commands, CancellationToken cancellationToken)
         {
-            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            var connectionString = _configuration.GetConnectionString("PostgreDB");
 
             using (var connection = new NpgsqlConnection(connectionString))
             {

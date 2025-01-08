@@ -87,7 +87,8 @@ namespace Backend.Services{
                     CommandText = command,
                     Output = result,
                     ExecutedAt = DateTime.UtcNow,
-                    SSHSessionId = sessionId
+                    SSHSessionId = sessionId,
+                    ExitCode = cmd.ExitStatus // Correctly assigning the exit status
                 };
 
                 // Add the command to the in-memory list for bulk insertion later
