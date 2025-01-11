@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Diagnostics;
 
@@ -51,6 +52,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient<IAIService, AIService>();
+builder.Services.AddSingleton<IAIServiceFactory, AiServiceFactory>();
+builder.Services.AddScoped<ConversationManager>(); // Enregistrement de ConversationManager
+
 //builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ISSHService, SSHService>();
 builder.Services.AddSingleton<ISSHSessionManager, SSHSessionManager>();
@@ -65,10 +69,8 @@ builder.Services.AddDistributedMemoryCache();
 
 // Gemini
 
-builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
 
-builder.Services.AddHttpClient<IGenerativeAIService, GenerativeAIService>();// Enable session for temporary data storage
-builder.Services.AddSession();
+    builder.Services.AddSession();
 
 // Add Controllers and Swagger
 builder.Services.AddControllers()
