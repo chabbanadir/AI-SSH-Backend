@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Backend.Models;
 using Backend.Models.Communs;
 using Backend.Models.Entities;
+using Backend.Models.Entities.SSH;
+using Backend.Models.Entities.AI;
 using Backend.Interfaces;
 
 namespace Backend.Context

@@ -6,7 +6,7 @@ using Backend.Models;
 using System.Threading.Tasks;
 using Backend.Models.Dtos;
 
-namespace Backend.Services
+namespace Backend.Services.Security
 {
     public class UserService : IUserService
     {

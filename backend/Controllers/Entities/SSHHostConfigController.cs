@@ -6,7 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 //using Backend.Interfaces;
 using Backend.Interfaces;
-using Backend.Models.Entities;
+using Backend.Models.Entities.SSH;
+
 using Backend.Models.Dtos;
 
 namespace Backend.Controllers.Entities

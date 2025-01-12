@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Backend.Models.Communs;
-using Backend.Models.Entities;
+using Backend.Models.Entities.SSH;
+using Backend.Models.Entities.AI;
+
 
 namespace Backend.Models{
 

@@ -6,7 +6,7 @@ using System.Text;
 using Backend.Models;
 using Backend.Interfaces;
 
-namespace Backend.Services
+namespace Backend.Services.Security
 {
     public class TokenService : ITokenService
     {

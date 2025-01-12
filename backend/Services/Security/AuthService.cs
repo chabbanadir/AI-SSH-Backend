@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Backend.Models;
 using Backend.Models.Entities; // Ensure this namespace includes AppUser
 using Microsoft.AspNetCore.Http;
-namespace Backend.Services
+namespace Backend.Services.Security
 {
     public class AuthService : IAuthService
     {

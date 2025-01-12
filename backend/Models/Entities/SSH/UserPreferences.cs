@@ -1,7 +1,7 @@
 using Backend.Models.Communs;
 using Backend.Models.Entities;
 
-namespace Backend.Models.Entities
+namespace Backend.Models.Entities.SSH
 {
     public class UserPreferences : AuditableEntity
     {

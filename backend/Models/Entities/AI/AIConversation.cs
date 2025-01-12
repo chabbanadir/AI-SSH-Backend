@@ -1,7 +1,8 @@
 using Backend.Models.Communs;
-using Backend.Models.Entities;
+using Backend.Models.Entities.SSH;
+using Backend.Models.Entities.AI;
 
-namespace Backend.Models.Entities
+namespace Backend.Models.Entities.AI
 {
     public class AIConversation : AuditableEntity
     {

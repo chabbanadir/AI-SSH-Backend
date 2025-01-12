@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Backend.Models.Entities{
+namespace Backend.Models.Entities.AI{
 public class ConversationContext
     {
         [JsonProperty("contents")]

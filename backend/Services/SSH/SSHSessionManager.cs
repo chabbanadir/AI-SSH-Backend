@@ -1,9 +1,9 @@
 // Services/SSHSessionManager.cs
 using System.Collections.Concurrent;
 using Renci.SshNet;
-using Backend.Models.Entities;
+using Backend.Models.Entities.SSH;
 using Backend.Interfaces;
-namespace Backend.Services
+namespace Backend.Services.SSH
 {
     public class SSHSessionManager :ISSHSessionManager
     {

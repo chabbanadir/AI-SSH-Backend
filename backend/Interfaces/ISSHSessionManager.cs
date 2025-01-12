@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using Renci.SshNet;
-using Backend.Models.Entities;
+using Backend.Models.Entities.SSH;
 namespace Backend.Services
 {
     public interface ISSHSessionManager

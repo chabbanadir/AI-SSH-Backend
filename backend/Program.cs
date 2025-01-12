@@ -14,7 +14,10 @@ using Backend.Models;
 using Backend.Context;
 using Backend.Interfaces;
 using Backend.Services;
+using Backend.Services.Security;
+using Backend.Services.SSH;
 using Backend.Models.Entities;
+
 
 using Backend.Repository;
 using Backend.Data;
@@ -51,14 +54,10 @@ builder.Services.AddHttpContextAccessor();
 // Add AuthService and UserService
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddHttpClient<IAIService, AIService>();
-builder.Services.AddSingleton<IAIServiceFactory, AiServiceFactory>();
-builder.Services.AddScoped<ConversationManager>(); // Enregistrement de ConversationManager
 
-//builder.Services.AddScoped<IAIService, AIService>();
+
 builder.Services.AddScoped<ISSHService, SSHService>();
 builder.Services.AddSingleton<ISSHSessionManager, SSHSessionManager>();
-builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
 builder.Services.AddLogging();
 
 // Register Repositories (that depend on IAppDbContext)

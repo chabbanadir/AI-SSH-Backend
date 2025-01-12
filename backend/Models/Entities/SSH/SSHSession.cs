@@ -1,7 +1,7 @@
 using Backend.Models.Communs;
-using Backend.Models.Entities;
-
-namespace Backend.Models.Entities
+using Backend.Models.Entities.SSH;
+using Backend.Models.Entities.AI;
+namespace Backend.Models.Entities.SSH
 {
     public class SSHSession : AuditableEntity
     {

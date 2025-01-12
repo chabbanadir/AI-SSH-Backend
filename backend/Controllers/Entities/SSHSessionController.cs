@@ -6,7 +6,7 @@ using System;
 using System.Linq;
 using Backend.Interfaces;
 using Backend.Models.Dtos;
-using Backend.Models.Entities;
+using Backend.Models.Entities.SSH;
 using Microsoft.Extensions.Logging;
 
 namespace Backend.Controllers.Entities
