@@ -1,0 +1,11 @@
+* [33md8374f5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;32mbackendRefactored[m[33m)[m Describe your changes briefly
+* [33mbac158d[m[33m ([m[1;31morigin/backendRefactored[m[33m)[m Refactor namespaces and folders for service
+* [33mcb213b4[m[33m ([m[1;31morigin/master[m[33m)[m Gemini Tested with success
+* [33m88bf498[m Gemini Tested with persistence Context, tested with API , Create Midlware for SSH/AI Service , and API to test it
+* [33m9086315[m Persistence Command and output done
+* [33m3cae3f8[m SSH fixed, Persistence Command and output to be done git add .
+* [33m2043c93[m Controllers, Interfaces & Services for :  CRUD ,AI and SSH
+* [33m36dcdec[m Fix RoleId type and apply migration FixRoleId
+* [33mdfa1211[m Implement JWT Auth and Refresh Token logic
+* [33mb2d7a70[m Added .gitignore to ignore unnecessary files
+* [33m854c567[m Initial commit: Added working state of the application

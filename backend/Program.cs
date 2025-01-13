@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Builder;
 
 using Backend.Models;
 using Backend.Context;
@@ -86,8 +87,12 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add CORS configuration
+builder.Services.AddCors();
+
 var app = builder.Build();
 app.UseHttpsRedirection();
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -99,6 +104,11 @@ if (app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+app.UseCors(builder =>
+    builder.AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader());
+
 app.UseRouting();
 
 app.UseSession(); // If using session-based authentication
