@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Context;
 using Backend.Interfaces;
+using Backend.Models.Entities.AI;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace Backend.Repository
 {
@@ -49,5 +51,7 @@ namespace Backend.Repository
         {
             return await _context.SaveChangesAsync() > 0;
         }
+
+     
     }
 }

@@ -16,14 +16,7 @@ public class ConversationContext
         public ConversationContext()
         {
             // Initialisation des contenus
-            Contents.Add(new Content
-            {
-                Role = "user",
-                Parts = new List<Part>
-                {
-                    new Part { Text = "hello ai" }
-                }
-            });
+           
 
             // Initialisation de la configuration de génération
             GenerationConfig = new GenerationConfig

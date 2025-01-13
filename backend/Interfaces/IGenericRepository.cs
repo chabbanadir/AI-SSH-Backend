@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
+using System.Linq.Expressions;
+using Backend.Models.Entities.AI;
 namespace Backend.Interfaces
 {
     public interface IGenericRepository<T> where T : class
@@ -11,5 +12,6 @@ namespace Backend.Interfaces
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task<bool> SaveChangesAsync();
+      
     }
 }

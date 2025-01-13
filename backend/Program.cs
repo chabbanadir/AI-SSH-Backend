@@ -16,7 +16,9 @@ using Backend.Interfaces;
 using Backend.Services;
 using Backend.Services.Security;
 using Backend.Services.SSH;
+using Backend.Services.AI;
 using Backend.Models.Entities;
+using Backend.Interfaces.AI;
 
 
 using Backend.Repository;
@@ -55,6 +57,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+// AI Service
+builder.Services.AddHttpClient<IAIService, AIService>(); 
+builder.Services.AddSingleton<IAiConversationManager, AiConversationManager>();
+builder.Services.AddScoped<IAiConversationService, AiConversationService>();
 
 builder.Services.AddScoped<ISSHService, SSHService>();
 builder.Services.AddSingleton<ISSHSessionManager, SSHSessionManager>();
