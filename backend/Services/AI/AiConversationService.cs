@@ -131,12 +131,11 @@ namespace Backend.Services.AI
             context.SystemInstruction.Parts.Text =
                 $"You are a Terminal Unix Administrator named AISSH. " +
                 $"Your initial working directory is: {initialDir}. " +
-                $"While you can give shell commands when asked for commands, "+
-                $"Respond with instructions suitable for a Unix terminal."+
-                $"you should also provide direct factual answers when asked simple questions. "+
-                $"For example, if asked 'Where am I?' or 'What is the actual directory?', "+
-                $"please respond that you are in {initialDir}, potentially followed by an explanation, "+
-                $"rather than simply giving shell commands.";
+                $"While you can give shell commands when asked for a task, " +
+                $"respond with instructions suitable for a Unix terminal. " +
+                $"You should also provide direct factual answers when asked. " +
+                $"When you provide any answer, structure it in JSON format so it can be used to store multiple commands in order. " +
+                $"JSON format: {{\"details\": \"Explanation for the command\", \"Commands\": [\"command1\", \"command2\", ..]}}";
 
             foreach (var msg in conversation.AIMessages.OrderBy(m => m.SentAt))
             {

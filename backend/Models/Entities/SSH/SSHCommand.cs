@@ -12,5 +12,6 @@ namespace Backend.Models.Entities.SSH
         public DateTime ExecutedAt { get; set; }
         public string SSHSessionId { get; set; } = default!;
         public SSHSession SSHSession { get; set; } = default!;
+        public string? ErrorOutput {get; set; } =default!;
     }
 }

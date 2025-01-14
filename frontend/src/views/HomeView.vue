@@ -50,10 +50,10 @@
     </div>
 
     <TerminalComponent
-      v-if="isLoading"
       :directory="initialDirectory"
       :onMessage="sendMessageToAI"
-    />
+      :sshSessionId="sshSessionId || ''" 
+      />
   </div>
 </template>
 

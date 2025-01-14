@@ -38,7 +38,7 @@
     </div>
 
     <!-- Active Commands Queue Section -->
-    <div class="w-1/4 p-4 bg-gray-800 transform -translate-y-32">
+    <div class="w-1/4 p-4 bg-gray-800">
       <h2 class="text-lg font-bold border-b border-gray-600 pb-2 mb-4">
         Active Commands Queue
       </h2>
@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+import axiosInstance from "@/plugins/axios";
 import { ref } from "vue";
 
 // Props
@@ -108,6 +109,12 @@ const props = defineProps({
   onMessage: {
     type: Function,
     required: false,
+  },
+  sshSessionId: {
+    type: String,
+    required: true, // Mark it as required if necessary
+    default: "", // Default to an empty string if null
+
   },
 });
 
@@ -122,7 +129,6 @@ const isProcessing = ref(false);
 const handleEnter = async () => {
   if (!currentInput.value.trim()) return;
 
-  // Push user’s command
   const inputCommand = currentInput.value.trim();
   output.value.push(`${props.directory}$ ${inputCommand}`);
   currentInput.value = "";
@@ -133,17 +139,43 @@ const handleEnter = async () => {
     if (props.onMessage) {
       // Wait for the AI response
       const response = await props.onMessage(inputCommand);
-      if (response) {
-        output.value.push(response); // Display AI’s reply
+
+      // Extract the JSON-like content
+      const jsonMatch = response.match(/```json\n([\s\S]*?)```/);
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          // Parse the extracted JSON
+          const parsedResponse = JSON.parse(jsonMatch[1]);
+          const details = parsedResponse.details;
+          const commands = parsedResponse.Commands;
+
+          // Add `details` to terminal output
+          output.value.push(details);
+
+          // Add each command to the commandsQueue
+          commands.forEach((command: string) => {
+            if (!commandsQueue.value.includes(command)) {
+              commandsQueue.value.push(command);
+            }
+          });
+        } catch (parseError) {
+          output.value.push("Error: Unable to parse AI response.");
+          console.error("JSON parse error:", parseError);
+        }
+      } else {
+        output.value.push("Error: No valid JSON found in AI response.");
       }
     } else {
       output.value.push("Simulated command output...");
     }
+  } catch (error) {
+    output.value.push("Error processing the command.");
+    console.error("Error in handleEnter:", error);
   } finally {
-    // Release "loading" state
-    isProcessing.value = false;
+    isProcessing.value = false; // Release "loading" state
   }
 };
+
 
 
 const addNewCommand = () => {
@@ -163,18 +195,34 @@ const editCommand = (index: number) => {
     commandsQueue.value[index] = editedCommand.trim();
   }
 };
-
 const addCommandToTerminal = async (index: number) => {
   const command = commandsQueue.value[index];
   output.value.push(`${props.directory}$ ${command}`);
 
-  if (props.onMessage) {
-    const response = await props.onMessage(command);
-    if (response) {
-      output.value.push(response); // Display AI response in the terminal
+  if (!props.sshSessionId) {
+    output.value.push("Error: SSH session is not active.");
+    return;
+  }
+
+  try {
+    // Call backend API to execute the command
+    const response = await axiosInstance.post(`/SSHSession/${props.sshSessionId}/ExecuteCommand`, { command });
+
+    // Extract data from the backend response
+    const { output: commandOutput, errorOutput, exitCode } = response.data;
+
+    if (exitCode === 0) {
+      // Success: Display the standard output
+      output.value.push(commandOutput || "Command executed successfully.");
+    } else {
+      // Error: Display the error output and exit code
+      output.value.push(`Error: ${errorOutput || "Unknown error occurred."}`);
+      output.value.push(`Exit code: ${exitCode}`);
     }
-  } else {
-    output.value.push(`Simulated output for: ${command}`);
+  } catch (error) {
+    output.value.push("Error executing command.");
+    console.error("Error in addCommandToTerminal:", error);
   }
 };
+
 </script>
