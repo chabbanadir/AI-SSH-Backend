@@ -1,12 +1,16 @@
 using System.Collections.Concurrent;
 using Renci.SshNet;
 using Backend.Models.Entities.SSH;
-namespace Backend.Services
+
+namespace Backend.Interfaces
 {
-    public interface ISSHSessionManager
+    public interface ISSHSessionManager : IDisposable
     {
-        ConcurrentDictionary<string, SshClient> ActiveSessions { get; } 
-        ConcurrentDictionary<string, List<SSHCommand>> SessionCommands { get; } 
-        ConcurrentDictionary<string, ShellStream> ActiveShellStreams { get; }
+        bool AddSession(string sessionId, SshClient client, ShellStream shellStream);
+        bool RemoveSession(string sessionId);
+        bool TryGetSessionClient(string sessionId, out SshClient client);
+        bool TryGetSessionShellStream(string sessionId, out ShellStream shellStream);
+        bool TryGetSessionCommands(string sessionId, out List<SSHCommand> commands);
+        void AddCommand(string sessionId, SSHCommand command);
     }
 }
