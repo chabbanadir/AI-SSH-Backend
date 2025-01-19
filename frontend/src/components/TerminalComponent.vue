@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-screen bg-gray-900 text-white">
     <!-- Terminal Section -->
-    <div class="w-3/4 p-4 bg-black text-green-500 font-mono border-r border-gray-600">
+    <div class="w-3/4 p-4 bg-black font-mono border-r border-gray-600">
       <div
         ref="terminal"
         class="flex flex-col bg-black p-4 rounded resize-y overflow-auto border border-gray-600"
@@ -13,23 +13,29 @@
             v-for="(line, index) in output"
             :key="index"
             class="whitespace-pre-line"
+            :class="{
+              'text-green-500': line.type === 'user',
+              'text-blue-400': line.type === 'ai',
+              'text-yellow-500': line.type === 'command',
+              'text-red-500': line.type === 'error',
+            }"
           >
-            {{ line }}
+            {{ line.content }}
           </div>
 
           <!-- Current Prompt with Input -->
           <div class="flex items-center" v-if="!isProcessing">
-          <span class="mr-2">{{ directory }}$</span>
-          <input
-            v-model="currentInput"
-            @keydown.enter="handleEnter"
-            class="bg-transparent outline-none text-green-500 flex-grow"
-            placeholder="Type a command..."
-          />
-        </div>
-        <div v-else class="text-green-500 italic">
-          Waiting for AI response...
-        </div>
+            <span class="mr-2">{{ directory }}$</span>
+            <input
+              v-model="currentInput"
+              @keydown.enter="handleEnter"
+              class="bg-transparent outline-none text-green-500 flex-grow border-b border-gray-600 focus:border-green-500 placeholder-italic"
+              placeholder="Type a command..."
+            />
+          </div>
+          <div v-else class="text-blue-400 italic">
+            Waiting for AI response...
+          </div>
         </div>
 
         <!-- White Space at the Bottom -->
@@ -38,59 +44,94 @@
     </div>
 
     <!-- Active Commands Queue Section -->
-    <div class="w-1/4 p-4 bg-gray-800">
-      <h2 class="text-lg font-bold border-b border-gray-600 pb-2 mb-4">
-        Active Commands Queue
-      </h2>
-      <ul class="space-y-2">
-        <li
-          v-for="(command, index) in commandsQueue"
-          :key="index"
-          class="flex justify-between items-center bg-gray-700 p-2 rounded hover:bg-gray-600"
+    <div class="w-1/4 p-4 bg-gray-800 rounded-lg">
+      <!-- Active Commands -->
+      <div>
+        <h2
+          @click="toggleActiveCommands"
+          class="text-lg font-bold flex justify-between items-center cursor-pointer border-b border-gray-600 pb-2 mb-4"
         >
-          <span>{{ command }}</span>
-          <div class="flex space-x-2">
-            <!-- Delete Button -->
-            <button
-              @click="deleteCommand(index)"
-              class="bg-red-500 text-white rounded p-1 hover:bg-red-600"
-              title="Delete"
-            >
-              X
-            </button>
-            <!-- Edit Button -->
-            <button
-              @click="editCommand(index)"
-              class="bg-yellow-500 text-black rounded p-1 hover:bg-yellow-600"
-              title="Edit"
-            >
-              E
-            </button>
-            <!-- Add Button -->
-            <button
-              @click="addCommandToTerminal(index)"
-              class="bg-green-500 text-white rounded p-1 hover:bg-green-600"
-              title="Add to Terminal"
-            >
-              +
-            </button>
-          </div>
-        </li>
-      </ul>
+          Active Commands Queue
+          <button
+            class="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+          >
+            {{ activeCommandsVisible ? "Hide" : "Expand" }}
+          </button>
+        </h2>
+        <ul v-show="activeCommandsVisible" class="space-y-2">
+          <li
+            v-for="(command, index) in activeCommands"
+            :key="index"
+            class="flex justify-between items-center bg-gray-700 p-2 rounded hover:bg-gray-600"
+          >
+            <span class="truncate">{{ command }}</span>
+            <div class="flex space-x-2">
+              <!-- Delete Button -->
+              <button
+                @click="deleteCommand(index)"
+                class="bg-red-500 text-white rounded p-1 hover:bg-red-600"
+                title="Delete"
+              >
+                X
+              </button>
+              <!-- Edit Button -->
+              <button
+                @click="editCommand(index)"
+                class="bg-yellow-500 text-black rounded p-1 hover:bg-yellow-600"
+                title="Edit"
+              >
+                E
+              </button>
+              <!-- Execute Button -->
+              <button
+                @click="executeCommand(index)"
+                class="bg-green-500 text-white rounded p-1 hover:bg-green-600"
+                title="Execute Command"
+              >
+                +
+              </button>
+            </div>
+          </li>
+        </ul>
 
-      <!-- Add New Command -->
-      <div class="mt-4">
-        <input
-          v-model="newCommand"
-          placeholder="New Command"
-          class="w-full bg-gray-600 text-white p-2 rounded mb-2 outline-none"
-        />
-        <button
-          @click="addNewCommand"
-          class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+        <!-- Add New Command -->
+        <div class="mt-4">
+          <input
+            v-model="newCommand"
+            placeholder="New Command"
+            class="w-full bg-gray-600 text-white p-2 rounded mb-2 outline-none"
+          />
+          <button
+            @click="addNewCommand"
+            class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          >
+            Add Command
+          </button>
+        </div>
+      </div>
+
+      <!-- Executed Commands Section -->
+      <div class="mt-6">
+        <h2
+          @click="toggleExecutedCommands"
+          class="text-lg font-bold flex justify-between items-center cursor-pointer border-b border-gray-600 pb-2 mb-4"
         >
-          Add Command
-        </button>
+          Executed Commands
+          <button
+            class="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+          >
+            {{ executedCommandsVisible ? "Hide" : "Expand" }}
+          </button>
+        </h2>
+        <ul v-show="executedCommandsVisible" class="space-y-2">
+          <li
+            v-for="(command, index) in executedCommands"
+            :key="index"
+            class="flex justify-between items-center bg-gray-600 p-2 rounded"
+          >
+            <span class="truncate">{{ command }}</span>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -108,121 +149,117 @@ const props = defineProps({
   },
   onMessage: {
     type: Function,
-    required: false,
+    required: true,
   },
   sshSessionId: {
     type: String,
-    required: true, // Mark it as required if necessary
-    default: "", // Default to an empty string if null
-
+    required: true,
   },
 });
 
-// Refs
-const output = ref<string[]>([]); // Terminal output history
+// Terminal Output
+const output = ref<{ type: string; content: string }[]>([]); // Terminal output
 const currentInput = ref<string>(""); // Current input
-const commandsQueue = ref<string[]>([]); // Active commands queue
-const newCommand = ref<string>(""); // New command input
-const isProcessing = ref(false);
+const isProcessing = ref(false); // Processing state
+
+// Command Lists
+const activeCommands = ref<string[]>([]);
+const executedCommands = ref<string[]>([]);
+const newCommand = ref<string>("");
+
+// Visibility Toggles
+const activeCommandsVisible = ref(true);
+const executedCommandsVisible = ref(false);
 
 // Methods
 const handleEnter = async () => {
   if (!currentInput.value.trim()) return;
 
   const inputCommand = currentInput.value.trim();
-  output.value.push(`${props.directory}$ ${inputCommand}`);
+  output.value.push({ type: "user", content: `${props.directory}$ ${inputCommand}` });
   currentInput.value = "";
-
-  isProcessing.value = true; // Start "loading" state
+  isProcessing.value = true;
 
   try {
-    if (props.onMessage) {
-      // Wait for the AI response
-      const response = await props.onMessage(inputCommand);
-
-      // Extract the JSON-like content
-      const jsonMatch = response.match(/```json\n([\s\S]*?)```/);
-      if (jsonMatch && jsonMatch[1]) {
-        try {
-          // Parse the extracted JSON
-          const parsedResponse = JSON.parse(jsonMatch[1]);
-          const details = parsedResponse.details;
-          const commands = parsedResponse.Commands;
-
-          // Add `details` to terminal output
-          output.value.push(details);
-
-          // Add each command to the commandsQueue
-          commands.forEach((command: string) => {
-            if (!commandsQueue.value.includes(command)) {
-              commandsQueue.value.push(command);
-            }
-          });
-        } catch (parseError) {
-          output.value.push("Error: Unable to parse AI response.");
-          console.error("JSON parse error:", parseError);
-        }
-      } else {
-        output.value.push("Error: No valid JSON found in AI response.");
-      }
-    } else {
-      output.value.push("Simulated command output...");
-    }
-  } catch (error) {
-    output.value.push("Error processing the command.");
-    console.error("Error in handleEnter:", error);
+    const response = await props.onMessage(inputCommand);
+    processAIResponse(response);
+  } catch  {
+    output.value.push({ type: "error", content: "Error processing the command." });
   } finally {
-    isProcessing.value = false; // Release "loading" state
+    isProcessing.value = false;
   }
 };
 
+const processAIResponse = (response: string) => {
+  const jsonMatch = response.match(/```json\n([\s\S]*?)```/);
+  if (jsonMatch && jsonMatch[1]) {
+    try {
+      const parsedResponse = JSON.parse(jsonMatch[1]);
+      const details = parsedResponse.details;
+      const commands = parsedResponse.Commands;
 
+      // Add details to terminal output
+      output.value.push({ type: "ai", content: details });
+
+      // Add commands to the active commands queue
+      commands.forEach((command: string) => {
+        if (!activeCommands.value.includes(command)) {
+          activeCommands.value.push(command);
+        }
+      });
+    } catch {
+      output.value.push({ type: "error", content: "Error parsing AI response." });
+    }
+  } else {
+    output.value.push({ type: "ai", content: response });
+  }
+};
+
+const executeCommand = async (index: number) => {
+  const command = activeCommands.value[index];
+  output.value.push({ type: "command", content: `${props.directory}$ ${command}` });
+
+  try {
+    const response = await axiosInstance.post(
+      `/SSHSession/${props.sshSessionId}/ExecuteCommand`,
+      { command }
+    );
+    const { output: commandOutput } = response.data;
+
+    // Display command output in terminal
+    output.value.push({ type: "command", content: commandOutput });
+
+    // Move the command to the executed list
+    executedCommands.value.push(command);
+    activeCommands.value.splice(index, 1);
+  } catch  {
+    output.value.push({ type: "error", content: "Error executing command."  });
+  }
+};
 
 const addNewCommand = () => {
   if (newCommand.value.trim()) {
-    commandsQueue.value.push(newCommand.value.trim());
+    activeCommands.value.push(newCommand.value.trim());
     newCommand.value = "";
   }
 };
 
 const deleteCommand = (index: number) => {
-  commandsQueue.value.splice(index, 1);
+  activeCommands.value.splice(index, 1);
 };
 
 const editCommand = (index: number) => {
-  const editedCommand = prompt("Edit Command:", commandsQueue.value[index]);
+  const editedCommand = prompt("Edit Command:", activeCommands.value[index]);
   if (editedCommand && editedCommand.trim()) {
-    commandsQueue.value[index] = editedCommand.trim();
-  }
-};
-const addCommandToTerminal = async (index: number) => {
-  const command = commandsQueue.value[index];
-  output.value.push(`${props.directory}$ ${command}`);
-
-  if (!props.sshSessionId) {
-    output.value.push("Error: SSH session is not active.");
-    return;
-  }
-
-  try {
-    // Call backend API to execute the command
-    const response = await axiosInstance.post(`/SSHSession/${props.sshSessionId}/ExecuteCommand`, { command });
-
-    // Extract data from the backend response
-    const { output: commandOutput, errorOutput, exitCode } = response.data;
-
-    if (exitCode === 0) {
-      // Success: Display the standard output
-      output.value.push(commandOutput || "Command executed successfully.");
-    } else {
-      // Error: Display the error output and exit code
-      output.value.push(`Error: ${errorOutput || "Unknown error occurred."}`);
-      output.value.push(`Exit code: ${exitCode}`);
-    }
-  } catch (error) {
-    output.value.push("Error executing command.");
-    console.error("Error in addCommandToTerminal:", error);
+    activeCommands.value[index] = editedCommand.trim();
   }
 };
 
+const toggleActiveCommands = () => {
+  activeCommandsVisible.value = !activeCommandsVisible.value;
+};
+
+const toggleExecutedCommands = () => {
+  executedCommandsVisible.value = !executedCommandsVisible.value;
+};
 </script>

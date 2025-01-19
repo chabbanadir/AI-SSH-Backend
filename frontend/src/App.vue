@@ -8,7 +8,7 @@
           <router-link to="/" class="block p-2 rounded hover:bg-gray-700">Home</router-link>
         </li>
         <li>
-          <router-link to="/settings" class="block p-2 rounded hover:bg-gray-700">Settings</router-link>
+          <router-link to="/Setting" class="block p-2 rounded hover:bg-gray-700">Settings</router-link>
         </li>
       </ul>
     </div>
