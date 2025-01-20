@@ -6,25 +6,28 @@
         isSidebarExpanded ? 'w-1/6 p-4' : 'w-16 p-2'
       }`"
     >
-      <button
-        @click="toggleSidebar"
-        class="mb-4 text-center bg-gray-700 hover:bg-gray-600 text-white p-2 rounded"
-      >
-        <i
-          :class="isSidebarExpanded ? 'fas fa-chevron-left' : 'fas fa-bars'"
-          class="text-lg"
-        ></i>
-      </button>
-      <div v-if="isSidebarExpanded" class="mb-4">
-        <h2 class="text-lg font-bold">Navigation</h2>
+      <!-- Header Section -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold" v-if="isSidebarExpanded">Navigation</h2>
+        <button
+          @click="toggleSidebar"
+          class="text-center bg-gray-700 hover:bg-gray-600 text-white p-2 rounded"
+        >
+          <font-awesome-icon
+            :icon="[isSidebarExpanded ? 'fas' : 'fas', isSidebarExpanded ? 'chevron-left' : 'bars']"
+            class="text-lg"
+          />
+        </button>
       </div>
+
+      <!-- Navigation Links -->
       <ul class="space-y-2">
         <li>
           <router-link
             to="/"
             class="flex items-center p-2 rounded hover:bg-gray-700"
           >
-            <i class="fas fa-home text-lg mr-2"></i>
+            <font-awesome-icon :icon="['fas', 'home']" class="mr-2" />
             <span v-if="isSidebarExpanded">Home</span>
           </router-link>
         </li>
@@ -33,7 +36,7 @@
             to="/Setting"
             class="flex items-center p-2 rounded hover:bg-gray-700"
           >
-            <i class="fas fa-cog text-lg mr-2"></i>
+            <font-awesome-icon :icon="['fas', 'cog']" class="mr-2" />
             <span v-if="isSidebarExpanded">Settings</span>
           </router-link>
         </li>
@@ -65,6 +68,5 @@ export default {
 </script>
 
 <style scoped>
-/* Make sure Font Awesome is included */
-@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
+/* No changes needed for styles */
 </style>

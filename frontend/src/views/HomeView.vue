@@ -141,14 +141,15 @@ const endAllSessions = async () => {
       alert("Failed to end SSH session.");
     }
   }
-
+  isLoading.value = false;
   if (aiConversationEnded || sshSessionEnded) {
     alert(
       `Sessions ended:\n${aiConversationEnded ? "AI Conversation" : ""}\n${
         sshSessionEnded ? "SSH Session" : ""
       }`
     );
-  } else {
+    
+    } else {
     alert("No active sessions to end.");
   }
 };

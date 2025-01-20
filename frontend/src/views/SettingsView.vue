@@ -201,30 +201,33 @@ export default defineComponent({
       };
     },
     async handleSave() {
-      try {
-        const configData: Omit<SSHConfig, "id"> = {
-          hostname: this.modalData.hostname || "",
-          port: this.modalData.port || 22,
-          authType: this.modalData.authType || "password",
-          passwordOrKeyPath: this.modalData.passwordOrKeyPath || "",
-          sshDefaultConfig: this.modalData.sshDefaultConfig || false,
-          username: this.modalData.username || "",
-          userId: "e36cd350-0621-492a-b350-07689e6c615a",
-        };
+  try {
+    const configData: SSHConfig = {
+      id: this.modalData.id || "", // Ensure id is sent when editing
+      hostname: this.modalData.hostname || "",
+      port: this.modalData.port || 22,
+      authType: this.modalData.authType || "password",
+      passwordOrKeyPath: this.modalData.passwordOrKeyPath || "",
+      sshDefaultConfig: this.modalData.sshDefaultConfig || false,
+      username: this.modalData.username || "",
+      userId: "e36cd350-0621-492a-b350-07689e6c615a", // Example static userId, replace as needed
+    };
 
-        if (this.editingConfig && this.modalData.id) {
-          const updatedConfig = await SSHService.updateConfig(this.modalData.id, configData);
-          const index = this.sshConfigs.findIndex((config) => config.id === updatedConfig.id);
-          if (index !== -1) this.sshConfigs[index] = updatedConfig;
-        } else {
-          const newConfig = await SSHService.createConfig(configData);
-          this.sshConfigs.push(newConfig);
-        }
-        this.closeModal();
-      } catch (error) {
-        console.error("Error saving SSH config:", error);
-      }
-    },
+    if (this.editingConfig && this.modalData.id) {
+      // Update existing config
+      const updatedConfig = await SSHService.updateConfig(this.modalData.id, configData);
+      const index = this.sshConfigs.findIndex((config) => config.id === updatedConfig.id);
+      if (index !== -1) this.sshConfigs[index] = updatedConfig;
+    } else {
+      // Create new config
+      const newConfig = await SSHService.createConfig(configData);
+      this.sshConfigs.push(newConfig);
+    }
+    this.closeModal();
+  } catch (error) {
+    console.error("Error saving SSH config:", error);
+  }
+},
     async deleteConfig(id: string) {
       if (confirm("Are you sure you want to delete this configuration?")) {
         try {

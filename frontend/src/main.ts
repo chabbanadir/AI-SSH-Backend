@@ -1,16 +1,28 @@
-import './assets/main.css'
-
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import './assets/main.css';
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import axiosInstance from './plugins/axios';
 
-import App from './App.vue'
-import router from './router'
+import App from './App.vue';
+import router from './router';
 
-const app = createApp(App)
+// Import Font Awesome libraries
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-app.use(createPinia())
-app.use(router)
+// Import specific icons (add the ones you need)
+import { faChevronLeft, faBars, faHome, faCog } from '@fortawesome/free-solid-svg-icons';
+
+// Add icons to the library
+library.add(faChevronLeft, faBars, faHome, faCog);
+
+const app = createApp(App);
+
+app.use(createPinia());
+app.use(router);
 app.config.globalProperties.$axios = axiosInstance;
 
-app.mount('#app')
+// Register Font Awesome globally
+app.component('font-awesome-icon', FontAwesomeIcon);
+
+app.mount('#app');
