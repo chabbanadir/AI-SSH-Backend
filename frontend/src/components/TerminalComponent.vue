@@ -60,11 +60,20 @@
         </h2>
         <ul v-show="activeCommandsVisible" class="space-y-2">
           <li
-            v-for="(command, index) in activeCommands"
+            v-for="(commandObj, index) in activeCommands"
             :key="index"
-            class="flex justify-between items-center bg-gray-700 p-2 rounded hover:bg-gray-600"
+            class="flex justify-between items-center bg-gray-700 p-2 rounded hover:bg-gray-600 relative"
           >
-            <span class="truncate">{{ command }}</span>
+            <!-- Command with Tooltip -->
+            <span class="group relative text-white cursor-pointer underline">
+              {{ commandObj.command }}
+              <!-- Tooltip -->
+              <span
+                class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-700 text-white text-sm p-4 size-44 rounded shadow-lg max-w-xs"
+              >
+                {{ commandObj.explanation }}
+              </span>
+            </span>
             <div class="flex space-x-2">
               <!-- Delete Button -->
               <button
@@ -97,10 +106,15 @@
         <!-- Add New Command -->
         <div class="mt-4">
           <input
-            v-model="newCommand"
+            v-model="newCommand.command"
             placeholder="New Command"
             class="w-full bg-gray-600 text-white p-2 rounded mb-2 outline-none"
           />
+          <textarea
+            v-model="newCommand.explanation"
+            placeholder="Command explanation"
+            class="w-full bg-gray-600 text-white p-2 rounded mb-2 outline-none"
+          ></textarea>
           <button
             @click="addNewCommand"
             class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
@@ -125,11 +139,11 @@
         </h2>
         <ul v-show="executedCommandsVisible" class="space-y-2">
           <li
-            v-for="(command, index) in executedCommands"
+            v-for="(commandObj, index) in executedCommands"
             :key="index"
             class="flex justify-between items-center bg-gray-600 p-2 rounded"
           >
-            <span class="truncate">{{ command }}</span>
+            <span class="truncate">{{ commandObj.command }}</span>
           </li>
         </ul>
       </div>
@@ -163,9 +177,9 @@ const currentInput = ref<string>(""); // Current input
 const isProcessing = ref(false); // Processing state
 
 // Command Lists
-const activeCommands = ref<string[]>([]);
-const executedCommands = ref<string[]>([]);
-const newCommand = ref<string>("");
+const activeCommands = ref<{ command: string; explanation: string }[]>([]);
+const executedCommands = ref<{ command: string; explanation: string }[]>([]);
+const newCommand = ref<{ command: string; explanation: string }>({ command: "", explanation: "" });
 
 // Visibility Toggles
 const activeCommandsVisible = ref(true);
@@ -183,7 +197,7 @@ const handleEnter = async () => {
   try {
     const response = await props.onMessage(inputCommand);
     processAIResponse(response);
-  } catch  {
+  } catch {
     output.value.push({ type: "error", content: "Error processing the command." });
   } finally {
     isProcessing.value = false;
@@ -202,9 +216,9 @@ const processAIResponse = (response: string) => {
       output.value.push({ type: "ai", content: details });
 
       // Add commands to the active commands queue
-      commands.forEach((command: string) => {
-        if (!activeCommands.value.includes(command)) {
-          activeCommands.value.push(command);
+      commands.forEach((cmd: { command: string; explanation: string }) => {
+        if (!activeCommands.value.some((c) => c.command === cmd.command)) {
+          activeCommands.value.push(cmd);
         }
       });
     } catch {
@@ -216,13 +230,13 @@ const processAIResponse = (response: string) => {
 };
 
 const executeCommand = async (index: number) => {
-  const command = activeCommands.value[index];
-  output.value.push({ type: "command", content: `${props.directory}$ ${command}` });
+  const commandObj = activeCommands.value[index];
+  output.value.push({ type: "command", content: `${props.directory}$ ${commandObj.command}` });
 
   try {
     const response = await axiosInstance.post(
       `/SSHSession/${props.sshSessionId}/ExecuteCommand`,
-      { command }
+      { command: commandObj.command }
     );
     const { output: commandOutput } = response.data;
 
@@ -230,17 +244,17 @@ const executeCommand = async (index: number) => {
     output.value.push({ type: "command", content: commandOutput });
 
     // Move the command to the executed list
-    executedCommands.value.push(command);
+    executedCommands.value.push(commandObj);
     activeCommands.value.splice(index, 1);
-  } catch  {
-    output.value.push({ type: "error", content: "Error executing command."  });
+  } catch {
+    output.value.push({ type: "error", content: "Error executing command." });
   }
 };
 
 const addNewCommand = () => {
-  if (newCommand.value.trim()) {
-    activeCommands.value.push(newCommand.value.trim());
-    newCommand.value = "";
+  if (newCommand.value.command.trim() && newCommand.value.explanation.trim()) {
+    activeCommands.value.push({ ...newCommand.value });
+    newCommand.value = { command: "", explanation: "" };
   }
 };
 
@@ -249,9 +263,17 @@ const deleteCommand = (index: number) => {
 };
 
 const editCommand = (index: number) => {
-  const editedCommand = prompt("Edit Command:", activeCommands.value[index]);
-  if (editedCommand && editedCommand.trim()) {
-    activeCommands.value[index] = editedCommand.trim();
+  const editedCommand = prompt(
+    "Edit Command:",
+    activeCommands.value[index].command
+  );
+  const editedexplanation = prompt(
+    "Edit explanation:",
+    activeCommands.value[index].explanation
+  );
+
+  if (editedCommand && editedCommand.trim() && editedexplanation && editedexplanation.trim()) {
+    activeCommands.value[index] = { command: editedCommand.trim(), explanation: editedexplanation.trim() };
   }
 };
 

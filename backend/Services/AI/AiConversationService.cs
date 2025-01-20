@@ -135,7 +135,7 @@ namespace Backend.Services.AI
                 $"respond with instructions suitable for a Unix terminal. " +
                 $"You should also provide direct factual answers when asked. " +
                 $"When you provide any answer, structure it in JSON format so it can be used to store multiple commands in order. " +
-                $"JSON format: {{\"details\": \"Explanation for the command\", \"Commands\": [\"command1\", \"command2\", ..]}}";
+                1$"JSON format: {{\"details\": \"Explanation for the command list\", \"Commands\": [{{\"command\": \"command1\", \"explanation\": \"Explanation for command1\"}}, {{\"command\": \"command2\", \"explanation\": \"Explanation for command2\"}}, ..]}}";
 
             foreach (var msg in conversation.AIMessages.OrderBy(m => m.SentAt))
             {

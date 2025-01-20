@@ -23,31 +23,37 @@
       </select>
     </div>
 
-    <div v-if="showDropdown" class="flex items-center space-x-4 mb-4">
-      <button
-        @click="initiateSSHSession"
-        class="bg-blue-500 text-white p-2 px-4 rounded hover:bg-blue-600"
-      >
-        Initiate SSH Session
-      </button>
-      <button
-        v-if="sshSessionId"
-        @click="startAiConversation"
-        class="bg-green-500 text-white p-2 px-4 rounded hover:bg-green-600"
-      >
-        Start AI Conversation
-      </button>
-    </div>
+    <div v-if="showDropdown" class="flex items-center justify-between mb-4">
+  <div class="flex space-x-4">
+    <button
+      @click="initiateSSHSession"
+      class="bg-blue-500 text-white p-2 px-4 rounded hover:bg-blue-600"
+    >
+      Initiate SSH Session
+    </button>
+    <button
+      v-if="sshSessionId"
+      @click="startAiConversation"
+      class="bg-green-500 text-white p-2 px-4 rounded hover:bg-green-600"
+    >
+      Start AI Conversation
+    </button>
+  </div>
 
-    <div v-if="showDropdown && sshSessionId" class="mb-4">
-      <p>SSH Session ID: {{ sshSessionId }}</p>
-      <p>Initial Directory: {{ initialDirectory }}</p>
-    </div>
-
-    <!-- Terminal Component -->
+  <button
+    v-if="sshSessionId || aiConversationId"
+    @click="endAllSessions"
+    class="bg-red-500 text-white p-2 px-4 rounded hover:bg-red-600"
+  >
+    End All Sessions
+  </button>
+</div>
+<!-- 
     <div v-if="!isLoading" class="loading-spinner">
       <p>Loading Terminal...</p>
     </div>
+ -->
+
 
     <TerminalComponent
       v-show="isLoading"
@@ -107,6 +113,46 @@ const initiateSSHSession = async () => {
     isLoading.value = false;
   }
 };
+const endAllSessions = async () => {
+  let aiConversationEnded = false;
+  let sshSessionEnded = false;
+
+  // End AI Conversation
+  if (aiConversationId.value) {
+    try {
+      await axiosInstance.post(`/AiConversation/${aiConversationId.value}/end`);
+      aiConversationId.value = null; // Reset AI conversation ID
+      aiConversationEnded = true;
+    } catch (error) {
+      console.error("Error ending AI conversation:", error);
+      alert("Failed to end AI conversation.");
+    }
+  }
+
+  // End SSH Session
+  if (sshSessionId.value) {
+    try {
+      await axiosInstance.post(`/SSHSession/${sshSessionId.value}/end`);
+      sshSessionId.value = null; // Reset SSH session ID
+      initialDirectory.value = "~"; // Reset initial directory
+      sshSessionEnded = true;
+    } catch (error) {
+      console.error("Error ending SSH session:", error);
+      alert("Failed to end SSH session.");
+    }
+  }
+
+  if (aiConversationEnded || sshSessionEnded) {
+    alert(
+      `Sessions ended:\n${aiConversationEnded ? "AI Conversation" : ""}\n${
+        sshSessionEnded ? "SSH Session" : ""
+      }`
+    );
+  } else {
+    alert("No active sessions to end.");
+  }
+};
+
 
 const startAiConversation = async () => {
   if (!sshSessionId.value) {

@@ -1,17 +1,16 @@
 <template>
   <div>
-<div class="flex justify-between">
-  <h1 class="text-xl font-bold mb-4">SSH Host Configurations</h1>
+    <div class="flex justify-between">
+      <h1 class="text-xl font-bold mb-4">SSH Host Configurations</h1>
 
-  <!-- Add Host Button -->
-  <button
-    @click="openAddModal"
-    class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mb-4"
-  >
-    Add Host Config
-  </button>
-
-</div>
+      <!-- Add Host Button -->
+      <button
+        @click="openAddModal"
+        class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mb-4"
+      >
+        Add Host Config
+      </button>
+    </div>
     <!-- List of Configurations -->
     <ul v-if="sshConfigs.length > 0" class="space-y-4">
       <li
@@ -23,16 +22,25 @@
           <p class="font-semibold">{{ config.hostname || "No hostname" }}</p>
           <p class="text-sm text-gray-400">Port: {{ config.port || "No port" }}</p>
         </div>
-        <button
-          @click="openEditModal(config)"
-          class="bg-yellow-500 text-black p-2 rounded hover:bg-yellow-600"
-        >
-          Edit
-        </button>
+        <div class="flex space-x-2">
+          <button
+            @click="openEditModal(config)"
+            class="bg-yellow-500 text-black p-2 rounded hover:bg-yellow-600"
+          >
+            Edit
+          </button>
+          <button
+            @click="deleteConfig(config.id)"
+            class="bg-red-500 text-white p-2 rounded hover:bg-red-600"
+          >
+            Delete
+          </button>
+        </div>
       </li>
     </ul>
     <p v-else class="text-gray-400">No SSH configurations found.</p>
 
+    <!-- Modal for Add/Edit -->
     <div
       v-if="isModalOpen"
       class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50"
@@ -128,14 +136,14 @@
         </form>
       </div>
     </div>
-
-
   </div>
 </template>
+
 <script lang="ts">
 import { defineComponent } from "vue";
 import { SSHService } from "../services/SSHService";
 import type { SSHConfig } from "../interfaces/SSHConfig";
+
 export default defineComponent({
   name: "SettingsView",
   data() {
@@ -176,7 +184,7 @@ export default defineComponent({
         authType: "password",
         passwordOrKeyPath: "",
         sshDefaultConfig: false,
-        username: "", // Pre-fill default username
+        username: "",
       };
       this.isModalOpen = true;
     },
@@ -193,40 +201,40 @@ export default defineComponent({
       };
     },
     async handleSave() {
-    try {
-      if (this.editingConfig && this.modalData.id) {
-        // Update Config
-        const updatedConfig = await SSHService.updateConfig(this.modalData.id, {
-          id: this.modalData.id!, // Include the id explicitly
-          hostname: this.modalData.hostname!,
-          port: this.modalData.port!,
-          authType: this.modalData.authType!,
-          passwordOrKeyPath: this.modalData.passwordOrKeyPath!,
-          sshDefaultConfig: this.modalData.sshDefaultConfig!,
-          username: this.modalData.username!, // Include username
-          userId: "e36cd350-0621-492a-b350-07689e6c615a", // Ensure UserId is sent
-        });
-        // Find and update in the list
-        const index = this.sshConfigs.findIndex((config) => config.id === updatedConfig.id);
-        if (index !== -1) this.sshConfigs[index] = updatedConfig;
-      } else {
-        // Add New Config
-        const newConfig = await SSHService.createConfig({
-          hostname: this.modalData.hostname!,
-          port: this.modalData.port!,
-          authType: this.modalData.authType!,
-          passwordOrKeyPath: this.modalData.passwordOrKeyPath!,
-          sshDefaultConfig: this.modalData.sshDefaultConfig!,
-          username: this.modalData.username!,
-          userId: "e36cd350-0621-492a-b350-07689e6c615a", // Fixed userId for now
-        });
-        this.sshConfigs.push(newConfig);
+      try {
+        const configData: Omit<SSHConfig, "id"> = {
+          hostname: this.modalData.hostname || "",
+          port: this.modalData.port || 22,
+          authType: this.modalData.authType || "password",
+          passwordOrKeyPath: this.modalData.passwordOrKeyPath || "",
+          sshDefaultConfig: this.modalData.sshDefaultConfig || false,
+          username: this.modalData.username || "",
+          userId: "e36cd350-0621-492a-b350-07689e6c615a",
+        };
+
+        if (this.editingConfig && this.modalData.id) {
+          const updatedConfig = await SSHService.updateConfig(this.modalData.id, configData);
+          const index = this.sshConfigs.findIndex((config) => config.id === updatedConfig.id);
+          if (index !== -1) this.sshConfigs[index] = updatedConfig;
+        } else {
+          const newConfig = await SSHService.createConfig(configData);
+          this.sshConfigs.push(newConfig);
+        }
+        this.closeModal();
+      } catch (error) {
+        console.error("Error saving SSH config:", error);
       }
-      this.closeModal();
-    } catch (error) {
-      console.error("Error saving SSH config:", error);
-    }
-  },
+    },
+    async deleteConfig(id: string) {
+      if (confirm("Are you sure you want to delete this configuration?")) {
+        try {
+          await SSHService.deleteConfig(id);
+          this.sshConfigs = this.sshConfigs.filter((config) => config.id !== id);
+        } catch (error) {
+          console.error("Error deleting SSH config:", error);
+        }
+      }
+    },
   },
 });
 </script>
