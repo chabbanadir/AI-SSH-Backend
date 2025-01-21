@@ -68,6 +68,7 @@
 import { ref, onMounted } from "vue";
 import TerminalComponent from "../components/TerminalComponent.vue";
 import axiosInstance from "../plugins/axios";
+import { authState } from "../stores/authStore"; // Import authState for userId
 
 interface SSHConfig {
   id: string;
@@ -80,6 +81,7 @@ interface SSHHostConfigApiResponse {
     id: string;
     hostname: string;
     port: number;
+    userId: string; // Include userId in the interface
     [key: string]: unknown;
   }>;
 }
@@ -89,7 +91,6 @@ const showDropdown = ref(true);
 const sshSessionId = ref<string | null>(null);
 const initialDirectory = ref("~");
 const aiConversationId = ref<string | null>(null);
-//const commandsQueue = ref<string[]>([]);
 const terminalOutput = ref<string[]>([]);
 const sshHostConfigs = ref<SSHConfig[]>([]);
 const selectedSshHostConfigId = ref<string>("");
@@ -113,15 +114,15 @@ const initiateSSHSession = async () => {
     isLoading.value = false;
   }
 };
+
 const endAllSessions = async () => {
   let aiConversationEnded = false;
   let sshSessionEnded = false;
 
-  // End AI Conversation
   if (aiConversationId.value) {
     try {
       await axiosInstance.post(`/AiConversation/${aiConversationId.value}/end`);
-      aiConversationId.value = null; // Reset AI conversation ID
+      aiConversationId.value = null;
       aiConversationEnded = true;
     } catch (error) {
       console.error("Error ending AI conversation:", error);
@@ -129,12 +130,11 @@ const endAllSessions = async () => {
     }
   }
 
-  // End SSH Session
   if (sshSessionId.value) {
     try {
       await axiosInstance.post(`/SSHSession/${sshSessionId.value}/end`);
-      sshSessionId.value = null; // Reset SSH session ID
-      initialDirectory.value = "~"; // Reset initial directory
+      sshSessionId.value = null;
+      initialDirectory.value = "~";
       sshSessionEnded = true;
     } catch (error) {
       console.error("Error ending SSH session:", error);
@@ -142,18 +142,17 @@ const endAllSessions = async () => {
     }
   }
   isLoading.value = false;
+
   if (aiConversationEnded || sshSessionEnded) {
     alert(
       `Sessions ended:\n${aiConversationEnded ? "AI Conversation" : ""}\n${
         sshSessionEnded ? "SSH Session" : ""
       }`
     );
-    
-    } else {
+  } else {
     alert("No active sessions to end.");
   }
 };
-
 
 const startAiConversation = async () => {
   if (!sshSessionId.value) {
@@ -173,30 +172,21 @@ const startAiConversation = async () => {
       }
     );
 
-    // If the server responds with { conversationId: "some-uuid", ... }
-    // then you need to store that in aiConversationId.value:
     aiConversationId.value = response.data.conversationId;
 
     console.log("AI Conversation started:", response.data);
   } catch (error) {
     console.error("Error starting AI conversation:", error);
-  } finally {
-    // ...
   }
 };
 
 const sendMessageToAI = async (message: string) => {
   if (!aiConversationId.value) {
     console.error("AI conversation is not started.");
-    return; // Or return some fallback message
+    return;
   }
 
   try {
-    // You may not need to push to `terminalOutput` here,
-    // because the TerminalComponent is the one that displays the output.
-    // But if you want to keep it, it's fine. Just note you also 
-    // want to return the data for TerminalComponent to display it.
-
     terminalOutput.value.push(`${initialDirectory.value}$ ${message}`);
 
     const response = await axiosInstance.post(
@@ -205,15 +195,11 @@ const sendMessageToAI = async (message: string) => {
     );
 
     const aiAnswer = response.data.answer;
-
-    // Push to local "terminalOutput" if you want logging here as well
     terminalOutput.value.push(aiAnswer);
 
-    // **Important**: return the AI's answer back to TerminalComponent
     return response.data.aiMessage;
   } catch (error) {
     console.error("Error sending message to AI:", error);
-    // Return an error message or something suitable
     return "Error: Could not get AI response.";
   }
 };
@@ -221,16 +207,21 @@ const sendMessageToAI = async (message: string) => {
 // Fetch SSH host configurations on mount
 onMounted(async () => {
   try {
-    const response = await axiosInstance.get<SSHHostConfigApiResponse>("/SSHHostConfig");
+    const response = await axiosInstance.get<SSHHostConfigApiResponse>(
+      "/SSHHostConfig"
+    );
     if (response.data.$values.length === 0) {
       alert("No SSH host configurations found.");
       return;
     }
-    sshHostConfigs.value = response.data.$values.map((item) => ({
-      id: item.id,
-      hostname: item.hostname,
-      port: item.port,
-    }));
+    // Filter configurations by the logged-in user's ID
+    sshHostConfigs.value = response.data.$values
+      .filter((item) => item.userId === authState.userId) // Filter by userId
+      .map((item) => ({
+        id: item.id,
+        hostname: item.hostname,
+        port: item.port,
+      }));
     selectedSshHostConfigId.value = sshHostConfigs.value[0]?.id || "";
   } catch (error) {
     console.error("Error fetching SSH host configurations:", error);

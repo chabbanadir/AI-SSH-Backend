@@ -1,4 +1,6 @@
+// axios.ts
 import axios from "axios";
+import { authState } from "../stores/authStore";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -8,17 +10,16 @@ const axiosInstance = axios.create({
   },
 });
 
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Axios Request Error:", {
-      message: error.message,
-      code: error.code,
-      config: error.config,
-      request: error.request,
-      response: error.response,
-    });
-    return Promise.reject(error);
+axiosInstance.interceptors.request.use((config) => {
+  const sid = authState.sessionId;
+  const userId = authState.userId;
+  if (sid) {
+    config.headers["Authorization"] = `Session ${sid}`;
   }
-);
+  if (userId) {
+    config.headers["UserId"] = userId; // Example: Send userId in headers
+  }
+  return config;
+});
+
 export default axiosInstance;

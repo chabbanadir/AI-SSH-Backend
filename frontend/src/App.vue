@@ -1,12 +1,41 @@
+<script lang="ts">
+import { ref } from "vue";
+import { useRouter } from "vue-router"; // Import Vue Router
+import { authState, logout } from "./stores/authStore";
+
+export default {
+  name: "App",
+  setup() {
+    const isSidebarExpanded = ref(true);
+    const router = useRouter(); // Access the router instance
+
+    const toggleSidebar = () => {
+      isSidebarExpanded.value = !isSidebarExpanded.value;
+    };
+
+    const handleLogout = async () => {
+      logout(); // Clear session and state
+      router.push("/login"); // Redirect to login page
+    };
+
+    return {
+      isSidebarExpanded,
+      toggleSidebar,
+      authState,
+      handleLogout,
+    };
+  },
+};
+</script>
 <template>
   <div class="flex h-screen">
     <!-- Sidebar Navigation -->
     <div
+      v-if="authState.isAuthenticated"
       :class="`transition-all duration-300 bg-gray-800 text-white ${
         isSidebarExpanded ? 'w-1/6 p-4' : 'w-16 p-2'
       }`"
     >
-      <!-- Header Section -->
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-bold" v-if="isSidebarExpanded">Navigation</h2>
         <button
@@ -19,8 +48,6 @@
           />
         </button>
       </div>
-
-      <!-- Navigation Links -->
       <ul class="space-y-2">
         <li>
           <router-link
@@ -33,7 +60,7 @@
         </li>
         <li>
           <router-link
-            to="/Setting"
+            to="/settings"
             class="flex items-center p-2 rounded hover:bg-gray-700"
           >
             <font-awesome-icon :icon="['fas', 'cog']" class="mr-2" />
@@ -41,6 +68,15 @@
           </router-link>
         </li>
       </ul>
+
+      <!-- Logout Button -->
+      <button
+        @click="handleLogout"
+        class="flex items-center w-full p-2 mt-4 rounded hover:bg-red-600 bg-red-500 text-white "
+      >
+      <font-awesome-icon :icon="['fas', 'right-from-bracket']" class="mr-2" />
+      <span v-if="isSidebarExpanded">Logout</span>
+      </button>
     </div>
 
     <!-- Main Content -->
@@ -49,24 +85,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import { ref } from "vue";
-
-export default {
-  name: "App",
-  setup() {
-    const isSidebarExpanded = ref(true);
-
-    const toggleSidebar = () => {
-      isSidebarExpanded.value = !isSidebarExpanded.value;
-    };
-
-    return { isSidebarExpanded, toggleSidebar };
-  },
-};
-</script>
-
-<style scoped>
-/* No changes needed for styles */
-</style>

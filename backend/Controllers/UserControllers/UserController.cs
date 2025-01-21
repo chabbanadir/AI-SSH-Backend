@@ -42,7 +42,7 @@ namespace Backend.Controllers.UserControllers
             if (!result.Success)
                 return Unauthorized(result.Message);
 
-            return Ok(new { message = result.Message });
+            return Ok(new { message = result });
         }
 
         // Logout a user

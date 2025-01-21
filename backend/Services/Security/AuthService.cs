@@ -36,7 +36,7 @@ namespace Backend.Services.Security
             // Optionally, you can store additional session data here if needed
             // e.g., _httpContextAccessor.HttpContext.Session.SetString("UserId", user.Id);
 
-            return Result<string>.SuccessResult("Login successful");
+            return Result<string>.SuccessResult(user.Id.ToString());
         }
 
         public async Task<Result> SignUpAsync(RegisterDto registerDto)
