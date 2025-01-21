@@ -57,13 +57,15 @@ export default {
           userName: this.username,
           password: this.password,
         });
-        if (response.data.message.success) {
-          const sid = response.data.message.data; // Extract sid
-          const userId = response.data.message.data; // Extract userId (same for now)
-          login(sid, userId); // Pass sid and userId to the store
+        if (response.status === 200 && response.data.message === "Login successful") {
+          // Great: we treat that as success
+          const userId = response.data.userId;
+          // If you want to pass a "sessionId" as well, you could do it.
+          // For now, let's store both "sid" and "userId" as userId or some placeholder
+          login(userId);
           this.$router.push("/");
         } else {
-          alert("Login failed: " + response.data.message.message);
+          alert("Login failed: " + response.data.message);
         }
       } catch (error) {
         console.error("Login error:", error);

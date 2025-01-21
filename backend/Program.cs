@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Builder;
-
+using Backend.Middleware;
 using Backend.Models;
 using Backend.Context;
 using Backend.Interfaces;
@@ -75,8 +75,13 @@ builder.Services.AddDistributedMemoryCache();
 
 // Gemini
 
-
-    builder.Services.AddSession();
+builder.Services.AddSession(options =>
+{
+    // Example: you can tweak idle timeout or cookie name
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // Add Controllers and Swagger
 builder.Services.AddControllers()
@@ -85,58 +90,72 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
     });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Optional: add general info, doc version, etc.
+    // options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
 
-// Add CORS configuration
-builder.Services.AddCors();
+    options.AddSecurityDefinition("cookieAuth", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Cookie,
+        Name = ".AspNetCore.Identity.Application", // or your cookie name
+        Description = "Cookie-based auth (ASP.NET Core Identity)"
+    });
 
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "cookieAuth"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("MyCorsPolicy", policy =>
+    {
+        // You CANNOT use "*" for AllowAnyOrigin when AllowCredentials is used
+        policy.WithOrigins("http://172.24.0.2:5173" , "http://172.24.0.3:5173") 
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+
+// Program.cs
 var app = builder.Build();
-app.UseHttpsRedirection();
-
-
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-}else
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
-app.UseCors(builder =>
-    builder.AllowAnyOrigin()
-           .AllowAnyMethod()
-           .AllowAnyHeader());
+
+app.UseHttpsRedirection();
+
+app.UseCors("MyCorsPolicy");
 
 app.UseRouting();
 
-app.UseSession(); // If using session-based authentication
-
-app.UseAuthentication();
-app.UseAuthorization();
-
+app.UseSession();             // 1) Session
+app.UseAuthentication();      // 2) Identity cookie auth
+app.UseAuthorization();       // 3) Policies/roles
+app.UseMiddleware<AuditMiddleware>(); // (Optional) if you want it here
 
 app.MapControllers();
-
-// Initialize the database
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    try
-    {
-        await DbInitializer.InitializeAsync(services);
-        db.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while initializing the database.");
-        // Optionally, rethrow the exception if you want the application to stop
-        // throw;
-    }
-}
-
-app.Run(); // This should keep the application running
+app.Run();

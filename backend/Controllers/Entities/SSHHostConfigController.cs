@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 //using Backend.Interfaces;
 using Backend.Interfaces;
 using Backend.Models.Entities.SSH;
+using Microsoft.AspNetCore.Authorization;
 
 using Backend.Models.Dtos;
 
 namespace Backend.Controllers.Entities
 {
+    [Authorize] // Restrict access to authenticated users
     [ApiController]
     [Route("api/[controller]")]
     public class SSHHostConfigController : ControllerBase

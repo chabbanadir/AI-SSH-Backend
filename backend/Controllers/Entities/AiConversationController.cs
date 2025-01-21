@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers.Entities
 {
+    [Authorize] // Restrict access to authenticated users
     [ApiController]
     [Route("api/[controller]")]
     public class AiConversationController : ControllerBase

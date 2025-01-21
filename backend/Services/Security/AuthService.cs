@@ -26,17 +26,18 @@ namespace Backend.Services.Security
         public async Task<Result<string>> LoginAsync(LoginDto model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
-            if (user == null)
+            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
                 return Result<string>.Failure("Invalid username or password.");
 
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, isPersistent: false, lockoutOnFailure: false);
+            // Sign in the user and issue the identity cookie
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
             if (!result.Succeeded)
                 return Result<string>.Failure("Invalid username or password.");
 
-            // Optionally, you can store additional session data here if needed
-            // e.g., _httpContextAccessor.HttpContext.Session.SetString("UserId", user.Id);
+            // Optionally store user info in the session
+            _httpContextAccessor.HttpContext.Session.SetString("UserId", user.Id);
 
-            return Result<string>.SuccessResult(user.Id.ToString());
+            return Result<string>.SuccessResult(user.Id);
         }
 
         public async Task<Result> SignUpAsync(RegisterDto registerDto)
@@ -69,8 +70,7 @@ namespace Backend.Services.Security
         public async Task<Result> LogoutAsync()
         {
             await _signInManager.SignOutAsync();
-            // Optionally, clear additional session data
-            //_httpContextAccessor.HttpContext.Session.Clear();
+            _httpContextAccessor.HttpContext.Session.Clear(); // Clear session
             return Result.SuccessResult("Logged out successfully");
         }
     }

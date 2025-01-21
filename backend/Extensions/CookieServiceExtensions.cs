@@ -11,8 +11,12 @@ namespace Backend.Extensions
 
         services.ConfigureApplicationCookie(options =>
         {
+            options.Cookie.Name = ".AspNetCore.Session";
+            options.SlidingExpiration = true;
             options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensure cookies are sent over HTTPS only
+            options.Cookie.SameSite = SameSiteMode.None;
+
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
             options.LoginPath = "/api/users/login";
             options.LogoutPath = "/api/users/logout";

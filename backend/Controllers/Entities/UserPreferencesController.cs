@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 //using Backend.Interfaces;
 using Backend.Context;
 using Backend.Models.Entities.SSH;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers.Entities{
-
+    [Authorize] // Restrict access to authenticated users
     [ApiController]
     [Route("api/[controller]")]
     public class UserPreferencesController : ControllerBase

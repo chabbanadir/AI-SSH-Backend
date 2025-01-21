@@ -33,21 +33,24 @@ namespace Backend.Controllers.UserControllers
 
             return Ok(new { message = result.Message });
         }
-
         // Login a user
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
+            // Call the AuthService to handle login logic
             var result = await _authService.LoginAsync(model);
-            if (!result.Success)
-                return Unauthorized(result.Message);
 
-            return Ok(new { message = result });
+            // Check if login was successful
+            if (!result.Success)
+                return Unauthorized(result.Message); // Return 401 with failure message
+
+            // Return a success message
+            return Ok(new { message = "Login successful", userId = result.Data });
         }
 
         // Logout a user
         [HttpPost("logout")]
-        [Authorize]
+        
         public async Task<IActionResult> Logout()
         {
             var result = await _authService.LogoutAsync();
