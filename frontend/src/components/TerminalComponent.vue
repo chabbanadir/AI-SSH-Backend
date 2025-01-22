@@ -73,11 +73,12 @@
             class="flex justify-between items-center bg-gray-700 p-2 rounded hover:bg-gray-600 relative"
           >
             <!-- Command with Tooltip -->
-            <span class="group relative text-white cursor-pointer underline  truncate ...">
-              {{ commandObj.command }}
+            <span class="group relative text-white cursor-pointer underline ">
+              <span class="text-white cursor-pointer underline truncate ...">{{ commandObj.command }}</span>
+              
               <!-- Tooltip -->
               <span
-                class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-700 text-white text-sm p-auto  rounded shadow-lg max-w-xs"
+                class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-700 text-white text-sm p-3  rounded shadow-lg w-56"
               >
                 {{ commandObj.explanation }}
               </span>
