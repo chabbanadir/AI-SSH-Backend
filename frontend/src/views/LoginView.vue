@@ -1,10 +1,17 @@
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-    <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-      <h1 class="text-2xl font-bold mb-6 text-center">Login</h1>
+  <div
+    class="relative flex items-center justify-center h-screen bg-cover bg-center "
+    style="background-image: url('/public/Screen.jpg');"
+  >
+    <!-- Login Form -->
+    <div
+      class="absolute bg-gray-800 p-8 rounded-lg shadow-md"
+      style="width: 49%; height: 71%; top: 9%; left: 25%;"
+    >
+      <h1 class="text-2xl font-bold mb-6 text-center text-white">Login</h1>
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
-          <label for="username" class="block text-sm mb-1">Username</label>
+          <label for="username" class="block text-sm mb-1 text-white">Username</label>
           <input
             id="username"
             v-model="username"
@@ -14,7 +21,7 @@
           />
         </div>
         <div>
-          <label for="password" class="block text-sm mb-1">Password</label>
+          <label for="password" class="block text-sm mb-1 text-white">Password</label>
           <input
             id="password"
             v-model="password"
@@ -37,6 +44,7 @@
     </div>
   </div>
 </template>
+
 
 <script lang="ts">
 import axiosInstance from "../plugins/axios";

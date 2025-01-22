@@ -1,6 +1,13 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-900">
-    <div class="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-sm">
+  <div
+    class="relative flex items-center justify-center h-screen bg-cover bg-center"
+    style="background-image: url('/public/Screen.jpg');"
+  >
+    <!-- Register Form -->
+    <div
+      class="absolute bg-gray-800 p-8 rounded-lg shadow-md"
+      style="width: 49%; height: 71%; top: 9%; left: 25%;"
+    >
       <h1 class="text-2xl text-white text-center mb-4">Register</h1>
       <form @submit.prevent="handleRegister" class="space-y-4">
         <input

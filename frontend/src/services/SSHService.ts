@@ -30,3 +30,4 @@ export const SSHService = {
     await axiosInstance.delete(`${API_BASE}/${id}`);
   },
 };
+

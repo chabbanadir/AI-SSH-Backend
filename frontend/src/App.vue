@@ -27,6 +27,7 @@ export default {
   },
 };
 </script>
+
 <template>
   <div class="flex h-screen">
     <!-- Sidebar Navigation -->
@@ -80,7 +81,7 @@ export default {
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-4">
+    <div class="flex-1">
       <router-view />
     </div>
   </div>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="p-4">
     <div class="flex justify-between items-center">
       <h1 class="text-xl font-bold mb-4">AI Interaction and Command Management</h1>
       <button
@@ -24,7 +24,6 @@
     </div>
 
     <div v-if="showDropdown" class="flex items-center justify-between mb-4">
-  <div class="flex space-x-4">
     <button
       @click="initiateSSHSession"
       class="bg-blue-500 text-white p-2 px-4 rounded hover:bg-blue-600"
@@ -38,15 +37,9 @@
     >
       Start AI Conversation
     </button>
-  </div>
+  
 
-  <button
-    v-if="sshSessionId || aiConversationId"
-    @click="endAllSessions"
-    class="bg-red-500 text-white p-2 px-4 rounded hover:bg-red-600"
-  >
-    End All Sessions
-  </button>
+
 </div>
 <!-- 
     <div v-if="!isLoading" class="loading-spinner">
@@ -59,7 +52,8 @@
       v-show="isLoading"
       :directory="initialDirectory"
       :onMessage="sendMessageToAI"
-      :sshSessionId="sshSessionId || ''" 
+      :sshSessionId="sshSessionId || ''"
+      @close="endAllSessions" 
       />
   </div>
 </template>
@@ -144,13 +138,13 @@ const endAllSessions = async () => {
   isLoading.value = false;
 
   if (aiConversationEnded || sshSessionEnded) {
-    alert(
+    console.log(
       `Sessions ended:\n${aiConversationEnded ? "AI Conversation" : ""}\n${
         sshSessionEnded ? "SSH Session" : ""
       }`
     );
   } else {
-    alert("No active sessions to end.");
+    console.log("No active sessions to end.");
   }
 };
 

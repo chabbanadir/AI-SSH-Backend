@@ -139,9 +139,7 @@ namespace Backend.Services.AI
 
             foreach (var msg in conversation.AIMessages.OrderBy(m => m.SentAt))
             {
-                // Convert "user" -> "user"
-                //         "ai"   -> "model"
-                // (or if you have "system" -> "model" as well, depending on your use case)
+
                 var googleRole = (msg.Sender == "ai") ? "model" 
                             : (msg.Sender == "user") ? "user"
                             : /* default fallback, maybe "user"? */ "user";

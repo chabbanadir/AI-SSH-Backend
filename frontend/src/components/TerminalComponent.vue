@@ -1,7 +1,12 @@
-<template>
-  <div class="flex h-screen bg-gray-900 text-white">
+<template >
+  <div class="flex flex-row w-full space-x-2">
+    <div class="w-3/4 ">
+      <topBar @close="()=> {
+        $emit('close');
+        output = [];
+      }" ></topBar>
     <!-- Terminal Section -->
-    <div class="w-3/4 p-4 bg-black font-mono border-r border-gray-600">
+    <div class="p-4 bg-black font-mono ">
       <div
         ref="terminal"
         class="flex flex-col bg-black p-4 rounded resize-y overflow-auto border border-gray-600"
@@ -42,9 +47,12 @@
         <div class="flex-grow"></div>
       </div>
     </div>
+    </div>
+    <div class=" w-1/4">
+      
 
     <!-- Active Commands Queue Section -->
-    <div class="w-1/4 p-4 bg-gray-800 rounded-lg">
+    <div class=" p-4 bg-gray-800 rounded-lg">
       <!-- Active Commands -->
       <div>
         <h2
@@ -58,48 +66,55 @@
             {{ activeCommandsVisible ? "Hide" : "Expand" }}
           </button>
         </h2>
-        <ul v-show="activeCommandsVisible" class="space-y-2">
+        <ul v-show="activeCommandsVisible" class="space-y-1">
           <li
             v-for="(commandObj, index) in activeCommands"
             :key="index"
             class="flex justify-between items-center bg-gray-700 p-2 rounded hover:bg-gray-600 relative"
           >
             <!-- Command with Tooltip -->
-            <span class="group relative text-white cursor-pointer underline">
+            <span class="group relative text-white cursor-pointer underline  truncate ...">
               {{ commandObj.command }}
               <!-- Tooltip -->
               <span
-                class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-700 text-white text-sm p-4 size-44 rounded shadow-lg max-w-xs"
+                class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-700 text-white text-sm p-auto  rounded shadow-lg max-w-xs"
               >
                 {{ commandObj.explanation }}
               </span>
             </span>
             <div class="flex space-x-2">
-              <!-- Delete Button -->
-              <button
+              <div>
+                <!-- Delete Button -->
+             
+
+                <button
                 @click="deleteCommand(index)"
-                class="bg-red-500 text-white rounded p-1 hover:bg-red-600"
+                class=" text-white bg-transparent  hover:text-red-600"
                 title="Delete"
               >
-                X
-              </button>
+              <Icon icon="mdi:delete"  width="23" height="20"/>
+            </button>
               <!-- Edit Button -->
               <button
                 @click="editCommand(index)"
-                class="bg-yellow-500 text-black rounded p-1 hover:bg-yellow-600"
+                class="  bg-transparent  hover:text-blue-600"
                 title="Edit"
               >
-                E
+              <Icon icon="mdi:file-edit" width="23" height="20"/>
+
               </button>
               <!-- Execute Button -->
               <button
                 @click="executeCommand(index)"
-                class="bg-green-500 text-white rounded p-1 hover:bg-green-600"
+                class="  bg-transparent  hover:text-green-600"
                 title="Execute Command"
               >
-                +
+              <Icon icon="mynaui:terminal-solid" width="23" height="20"/>
+
               </button>
             </div>
+            </div>
+            
           </li>
         </ul>
 
@@ -148,13 +163,19 @@
         </ul>
       </div>
     </div>
+    </div>
   </div>
+
+
+ 
+
 </template>
 
 <script setup lang="ts">
 import axiosInstance from "@/plugins/axios";
 import { ref } from "vue";
-
+import { Icon } from "@iconify/vue";
+import topBar from "./TopBar.vue";
 // Props
 const props = defineProps({
   directory: {
@@ -186,6 +207,7 @@ const activeCommandsVisible = ref(true);
 const executedCommandsVisible = ref(false);
 
 // Methods
+
 const handleEnter = async () => {
   if (!currentInput.value.trim()) return;
 
@@ -252,7 +274,7 @@ const executeCommand = async (index: number) => {
 };
 
 const addNewCommand = () => {
-  if (newCommand.value.command.trim() && newCommand.value.explanation.trim()) {
+  if (newCommand.value.command.trim()) {
     activeCommands.value.push({ ...newCommand.value });
     newCommand.value = { command: "", explanation: "" };
   }

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="p-4">
     <div class="flex justify-between">
       <h1 class="text-xl font-bold mb-4">SSH Host Configurations</h1>
 
