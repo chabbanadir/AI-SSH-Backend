@@ -283,7 +283,7 @@ namespace Backend.Services.SSH
         {
             // Remove ANSI codes and control characters
             var cleanedOutput = StripAnsiCodes(rawOutput);
-            cleanedOutput = RemoveControlCharacters(cleanedOutput);
+            //cleanedOutput = RemoveControlCharacters(cleanedOutput);
 
             // Find the first occurrence of __COMMAND_START__
             int firstStart = cleanedOutput.IndexOf(CommandStartMarker, StringComparison.Ordinal);
@@ -339,9 +339,9 @@ namespace Backend.Services.SSH
             return string.IsNullOrWhiteSpace(text) ? string.Empty : AnsiRegex.Replace(text, string.Empty);
         }
 
-        private string RemoveControlCharacters(string text)
-        {
-            return string.IsNullOrWhiteSpace(text) ? string.Empty : Regex.Replace(text, @"[\x00-\x1F\x7F]", string.Empty);
-        }
+        // private string RemoveControlCharacters(string text)
+        // {
+        //     return string.IsNullOrWhiteSpace(text) ? string.Empty : Regex.Replace(text, @"[\x00-\x1F\x7F]", string.Empty);
+        // }
     }
 }
